@@ -33,7 +33,7 @@ function App() {
 
       <ul>
         {universos.map((u) => (
-          <li key={u.id_universo}>{u.nombre_universo}</li>
+          <li key={u.id_universo}>{u.nombre}</li>
         ))}
       </ul>
     </div>
