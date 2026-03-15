@@ -11,7 +11,7 @@ function App() {
       const { data, error } = await supabase
         .from("universos_negocio")
         .select("*")
-        .order("nombre_universo");
+        .order("nombre");
 
       if (error) {
         console.error(error);
