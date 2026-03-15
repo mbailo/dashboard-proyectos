@@ -9,7 +9,7 @@ function App() {
   useEffect(() => {
     async function cargarUniversos() {
       const { data, error } = await supabase
-        .from("universos")
+        .from("universos_negocio")
         .select("*")
         .order("nombre_universo");
 
