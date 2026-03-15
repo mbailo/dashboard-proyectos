@@ -4,6 +4,7 @@ import { supabase } from "./supabase";
 
 function App() {
   const [universos, setUniversos] = useState([]);
+  const [mensaje, setMensaje] = useState("Cargando...");
 
   useEffect(() => {
     async function cargarUniversos() {
@@ -14,8 +15,10 @@ function App() {
 
       if (error) {
         console.error(error);
+        setMensaje(`Error: ${error.message}`);
       } else {
-        setUniversos(data);
+        setUniversos(data || []);
+        setMensaje(`Filas recibidas: ${(data || []).length}`);
       }
     }
 
@@ -25,8 +28,8 @@ function App() {
   return (
     <div style={{ fontFamily: "Arial", padding: "40px" }}>
       <h1>Dashboard de Proyectos</h1>
-
       <h2>Universos</h2>
+      <p>{mensaje}</p>
 
       <ul>
         {universos.map((u) => (
