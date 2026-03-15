@@ -15,8 +15,6 @@ function App() {
     inversion_estimada: "",
     impacto_estimado: "",
     owner: "",
-    fase: "En Definición",
-    situacion: "En tiempo",
     fecha_inicio: "",
     fecha_fin: ""
   });
@@ -62,8 +60,8 @@ function App() {
       p_impacto_estimado:
         form.impacto_estimado === "" ? 0 : Number(form.impacto_estimado),
       p_owner: form.owner,
-      p_fase: form.fase,
-      p_situacion: form.situacion,
+      p_fase: "En Definición",
+      p_situacion: "En tiempo",
       p_fecha_inicio: form.fecha_inicio || null,
       p_fecha_fin: form.fecha_fin || null
     });
@@ -85,8 +83,6 @@ function App() {
       inversion_estimada: "",
       impacto_estimado: "",
       owner: "",
-      fase: "En Definición",
-      situacion: "En tiempo",
       fecha_inicio: "",
       fecha_fin: ""
     });
@@ -96,132 +92,123 @@ function App() {
     page: {
       minHeight: "100vh",
       margin: 0,
-      padding: "24px",
+      padding: "16px",
       fontFamily:
         "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       background:
-        "linear-gradient(135deg, #0f172a 0%, #1e293b 35%, #0f766e 100%)",
+        "linear-gradient(135deg, #0b132b 0%, #1c2541 38%, #0f766e 100%)",
       color: "#0f172a",
       display: "flex",
       alignItems: "center",
-      justifyContent: "center"
+      justifyContent: "center",
+      boxSizing: "border-box"
     },
     shell: {
       width: "100%",
-      maxWidth: "1180px"
+      maxWidth: "1120px"
     },
     card: {
       background: "rgba(255,255,255,0.96)",
-      borderRadius: "24px",
-      boxShadow: "0 25px 70px rgba(15, 23, 42, 0.30)",
+      borderRadius: "20px",
+      boxShadow: "0 18px 45px rgba(15, 23, 42, 0.28)",
       overflow: "hidden",
       backdropFilter: "blur(10px)"
     },
     header: {
-      padding: "28px 32px 18px 32px",
+      padding: "18px 24px 12px 24px",
       background: "linear-gradient(135deg, #ffffff 0%, #ecfeff 100%)",
       borderBottom: "1px solid #e2e8f0"
     },
     eyebrow: {
-      fontSize: "11px",
-      fontWeight: 700,
+      fontSize: "10px",
+      fontWeight: 800,
       textTransform: "uppercase",
       letterSpacing: "0.12em",
       color: "#0f766e",
-      marginBottom: "8px"
+      marginBottom: "6px"
     },
     title: {
       margin: 0,
-      fontSize: "28px",
-      lineHeight: 1.1,
+      fontSize: "24px",
+      lineHeight: 1.05,
       fontWeight: 800,
       color: "#0f172a"
     },
     subtitle: {
-      margin: "8px 0 0 0",
-      fontSize: "13px",
-      lineHeight: 1.5,
+      margin: "6px 0 0 0",
+      fontSize: "12px",
+      lineHeight: 1.35,
       color: "#475569",
       maxWidth: "760px"
     },
     content: {
-      padding: "24px 32px 32px 32px"
+      padding: "16px 24px 20px 24px"
     },
     form: {
       display: "grid",
-      gap: "18px"
+      gap: "12px"
     },
     grid2: {
       display: "grid",
       gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-      gap: "16px"
-    },
-    grid1: {
-      display: "grid",
-      gridTemplateColumns: "1fr",
-      gap: "16px"
-    },
-    sectionTitle: {
-      margin: "8px 0 0 0",
-      fontSize: "13px",
-      fontWeight: 800,
-      color: "#0f172a"
+      gap: "12px"
     },
     field: {
       display: "flex",
       flexDirection: "column",
-      gap: "6px"
+      gap: "4px"
     },
     label: {
-      fontSize: "12px",
+      fontSize: "11px",
       fontWeight: 700,
       color: "#334155"
     },
     input: {
       width: "100%",
-      padding: "11px 12px",
-      borderRadius: "12px",
+      padding: "9px 10px",
+      borderRadius: "10px",
       border: "1px solid #cbd5e1",
-      fontSize: "13px",
+      fontSize: "12px",
       outline: "none",
       boxSizing: "border-box",
       background: "#ffffff",
-      color: "#0f172a"
+      color: "#0f172a",
+      height: "36px"
     },
     textarea: {
       width: "100%",
-      padding: "11px 12px",
-      borderRadius: "12px",
+      padding: "9px 10px",
+      borderRadius: "10px",
       border: "1px solid #cbd5e1",
-      fontSize: "13px",
+      fontSize: "12px",
       outline: "none",
       boxSizing: "border-box",
-      resize: "vertical",
+      resize: "none",
       background: "#ffffff",
       color: "#0f172a",
-      minHeight: "110px"
+      minHeight: "74px"
     },
     banner: {
-      borderRadius: "14px",
-      padding: "12px 14px",
-      fontSize: "13px",
+      borderRadius: "12px",
+      padding: "9px 12px",
+      fontSize: "12px",
       fontWeight: 600
     },
     actions: {
       display: "flex",
       justifyContent: "flex-end",
-      marginTop: "6px"
+      marginTop: "2px"
     },
     button: {
       border: "none",
-      borderRadius: "14px",
-      padding: "13px 18px",
-      fontSize: "13px",
+      borderRadius: "12px",
+      padding: "11px 16px",
+      fontSize: "12px",
       fontWeight: 800,
       cursor: "pointer",
       color: "#ffffff",
       background: "linear-gradient(135deg, #0f766e 0%, #0891b2 100%)",
-      boxShadow: "0 10px 24px rgba(8, 145, 178, 0.28)"
+      boxShadow: "0 10px 22px rgba(8, 145, 178, 0.22)"
     }
   };
 
@@ -240,8 +227,8 @@ function App() {
             <div style={styles.eyebrow}>Dashboard de proyectos</div>
             <h1 style={styles.title}>Alta de Proyecto</h1>
             <p style={styles.subtitle}>
-              Registra un nuevo proyecto en una única pantalla. El identificador
-              se generará automáticamente con el formato del universo seleccionado.
+              Completa la información inicial del proyecto. La fase y la situación
+              se revisarán más adelante en la ficha de seguimiento.
             </p>
           </div>
 
@@ -279,50 +266,37 @@ function App() {
                 </div>
               </div>
 
-              <div style={styles.grid1}>
-                <div style={styles.field}>
-                  <label style={styles.label}>Título del proyecto</label>
-                  <input
-                    type="text"
-                    name="titulo"
-                    value={form.titulo}
-                    onChange={handleChange}
-                    required
-                    style={styles.input}
-                  />
-                </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Título del proyecto</label>
+                <input
+                  type="text"
+                  name="titulo"
+                  value={form.titulo}
+                  onChange={handleChange}
+                  required
+                  style={styles.input}
+                />
               </div>
 
               <div style={styles.grid2}>
                 <div style={styles.field}>
-                  <label style={styles.label}>Fase</label>
-                  <select
-                    name="fase"
-                    value={form.fase}
+                  <label style={styles.label}>Descripción</label>
+                  <textarea
+                    name="descripcion"
+                    value={form.descripcion}
                     onChange={handleChange}
-                    required
-                    style={styles.input}
-                  >
-                    <option value="En Definición">En Definición</option>
-                    <option value="En Planificación">En Planificación</option>
-                    <option value="En Curso">En Curso</option>
-                    <option value="Finalizado">Finalizado</option>
-                  </select>
+                    style={styles.textarea}
+                  />
                 </div>
 
                 <div style={styles.field}>
-                  <label style={styles.label}>Situación</label>
-                  <select
-                    name="situacion"
-                    value={form.situacion}
+                  <label style={styles.label}>Beneficios</label>
+                  <textarea
+                    name="beneficios"
+                    value={form.beneficios}
                     onChange={handleChange}
-                    required
-                    style={styles.input}
-                  >
-                    <option value="En tiempo">En tiempo</option>
-                    <option value="Riesgo de retraso">Riesgo de retraso</option>
-                    <option value="Retrasado">Retrasado</option>
-                  </select>
+                    style={styles.textarea}
+                  />
                 </div>
               </div>
 
@@ -350,8 +324,6 @@ function App() {
                 </div>
               </div>
 
-              <h2 style={styles.sectionTitle}>Valor del proyecto</h2>
-
               <div style={styles.grid2}>
                 <div style={styles.field}>
                   <label style={styles.label}>Inversión estimada (€)</label>
@@ -376,28 +348,6 @@ function App() {
                     min="0"
                     step="0.01"
                     style={styles.input}
-                  />
-                </div>
-              </div>
-
-              <div style={styles.grid2}>
-                <div style={styles.field}>
-                  <label style={styles.label}>Descripción</label>
-                  <textarea
-                    name="descripcion"
-                    value={form.descripcion}
-                    onChange={handleChange}
-                    style={styles.textarea}
-                  />
-                </div>
-
-                <div style={styles.field}>
-                  <label style={styles.label}>Beneficios</label>
-                  <textarea
-                    name="beneficios"
-                    value={form.beneficios}
-                    onChange={handleChange}
-                    style={styles.textarea}
                   />
                 </div>
               </div>
