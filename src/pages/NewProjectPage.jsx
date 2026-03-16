@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabase"; // cambia a ../supabase si el archivo está en /src
+import { useNavigate } from "react-router-dom";
 
 export default function NewProjectPage() {
+  const navigate = useNavigate();
   const [universos, setUniversos] = useState([]);
   const [mensaje, setMensaje] = useState("");
   const [tipoMensaje, setTipoMensaje] = useState("");
@@ -71,20 +73,35 @@ export default function NewProjectPage() {
       return;
     }
 
-    setMensaje(`Proyecto creado correctamente: ${data.id_proyecto}`);
+    setMensaje("Proyecto creado correctamente");
     setTipoMensaje("success");
 
-    setForm({
-      id_universo: "",
-      titulo: "",
-      descripcion: "",
-      beneficios: "",
-      inversion_estimada: "",
-      impacto_estimado: "",
-      owner: "",
-      fecha_inicio: "",
-      fecha_fin: ""
-    });
+    const nuevoId =
+      typeof data === "string"
+        ? data
+        : Array.isArray(data)
+        ? data[0]?.id_proyecto || data[0]?.id
+        : data?.id_proyecto || data?.id;
+    
+    if (!nuevoId) {
+      setMensaje("Proyecto creado, pero no se pudo obtener el identificador para redirigir.");
+      setTipoMensaje("warning");
+      return;
+    }
+
+    navigate(`/proyectos/${nuevoId}`);
+    
+//    setForm({
+//      id_universo: "",
+//      titulo: "",
+//      descripcion: "",
+//      beneficios: "",
+//      inversion_estimada: "",
+//      impacto_estimado: "",
+//      owner: "",
+//      fecha_inicio: "",
+//      fecha_fin: ""
+//    });
   }
 
   const styles = {
