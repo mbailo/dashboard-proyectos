@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../supabase";
 
 function formatCurrency(value) {
   if (value === null || value === undefined) return "-";
