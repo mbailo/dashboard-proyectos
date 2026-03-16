@@ -106,10 +106,10 @@ export default function ProjectDetailPage() {
         .select(`
           id_tarea,
           id_proyecto,
-          titulo_tarea,
-          owner_tarea,
+          titulo,
+          owner,
           estado_tarea,
-          situacion_tarea,
+          situacion,
           fecha_inicio,
           fecha_fin
         `)
@@ -272,10 +272,10 @@ export default function ProjectDetailPage() {
                 {tareas.map((tarea) => (
                   <tr key={tarea.id_tarea}>
                     <td style={tdStyle}>{tarea.id_tarea}</td>
-                    <td style={tdStyle}>{tarea.titulo_tarea || "-"}</td>
-                    <td style={tdStyle}>{tarea.owner_tarea || "-"}</td>
+                    <td style={tdStyle}>{tarea.titulo || "-"}</td>
+                    <td style={tdStyle}>{tarea.owner || "-"}</td>
                     <td style={tdStyle}>{tarea.estado_tarea || "-"}</td>
-                    <td style={tdStyle}>{tarea.situacion_tarea || "-"}</td>
+                    <td style={tdStyle}>{tarea.situacion || "-"}</td>
                     <td style={tdStyle}>{formatDate(tarea.fecha_inicio)}</td>
                     <td style={tdStyle}>{formatDate(tarea.fecha_fin)}</td>
                   </tr>
