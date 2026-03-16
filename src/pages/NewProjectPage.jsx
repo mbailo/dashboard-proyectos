@@ -88,20 +88,19 @@ export default function NewProjectPage() {
   }
 
   const styles = {
-    page: {
-      minHeight: "100vh",
-      margin: 0,
-      padding: "16px",
-      fontFamily:
-        "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      background:
-        "linear-gradient(135deg, #0b132b 0%, #1c2541 38%, #0f766e 100%)",
-      color: "#0f172a",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      boxSizing: "border-box"
-    },
+  page: {
+    minHeight: "100vh",
+    margin: 0,
+    padding: "8px",
+    fontFamily:
+      "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    background: "#f1f5f9",
+    color: "#0f172a",
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "center",
+    boxSizing: "border-box"
+  },
     shell: {
       width: "100%",
       maxWidth: "1120px"
