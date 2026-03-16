@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { supabase } from "../supabase";
+import { supabase } from "../lib/supabase";
 
 function formatCurrency(value) {
   if (value === null || value === undefined) return "-";
@@ -44,9 +44,25 @@ function InfoCard({ label, value }) {
   );
 }
 
+const thStyle = {
+  textAlign: "left",
+  padding: "12px",
+  borderBottom: "1px solid #e5e7eb",
+  fontSize: "13px",
+  color: "#374151",
+};
+
+const tdStyle = {
+  padding: "12px",
+  borderBottom: "1px solid #e5e7eb",
+  fontSize: "14px",
+  color: "#111827",
+};
+
 export default function ProjectDetailPage() {
   const { id } = useParams();
   const [proyecto, setProyecto] = useState(null);
+  const [tareas, setTareas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -80,11 +96,36 @@ export default function ProjectDetailPage() {
       if (error) {
         setErrorMsg(error.message || "No se pudo cargar el proyecto");
         setProyecto(null);
+        setTareas([]);
+        setLoading(false);
+        return;
+      }
+
+      const { data: tareasData, error: tareasError } = await supabase
+        .from("tareas")
+        .select(`
+          id_tarea,
+          id_proyecto,
+          titulo_tarea,
+          owner_tarea,
+          estado_tarea,
+          situacion_tarea,
+          fecha_inicio,
+          fecha_fin
+        `)
+        .eq("id_proyecto", id)
+        .order("id_tarea", { ascending: true });
+
+      if (tareasError) {
+        setErrorMsg(tareasError.message || "No se pudieron cargar las tareas");
+        setProyecto(data);
+        setTareas([]);
         setLoading(false);
         return;
       }
 
       setProyecto(data);
+      setTareas(tareasData || []);
       setLoading(false);
     }
 
@@ -148,7 +189,13 @@ export default function ProjectDetailPage() {
             {proyecto.titulo}
           </h2>
 
-          <p style={{ margin: "0 0 12px 0", color: "#374151", lineHeight: 1.5 }}>
+          <p
+            style={{
+              margin: "0 0 12px 0",
+              color: "#374151",
+              lineHeight: 1.5,
+            }}
+          >
             {proyecto.descripcion || "Sin descripción"}
           </p>
 
@@ -196,9 +243,47 @@ export default function ProjectDetailPage() {
         }}
       >
         <h3 style={{ marginTop: 0 }}>Tareas del proyecto</h3>
-        <p style={{ marginBottom: 0, color: "#6b7280" }}>
-          Próximo paso: cargar aquí la tabla de tareas.
-        </p>
+
+        {tareas.length === 0 ? (
+          <p style={{ marginBottom: 0, color: "#6b7280" }}>
+            Este proyecto todavía no tiene tareas.
+          </p>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                marginTop: "12px",
+              }}
+            >
+              <thead>
+                <tr style={{ background: "#f9fafb" }}>
+                  <th style={thStyle}>Id Tarea</th>
+                  <th style={thStyle}>Descripción</th>
+                  <th style={thStyle}>Owner</th>
+                  <th style={thStyle}>Estado</th>
+                  <th style={thStyle}>Situación</th>
+                  <th style={thStyle}>Inicio</th>
+                  <th style={thStyle}>Fin</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tareas.map((tarea) => (
+                  <tr key={tarea.id_tarea}>
+                    <td style={tdStyle}>{tarea.id_tarea}</td>
+                    <td style={tdStyle}>{tarea.titulo_tarea || "-"}</td>
+                    <td style={tdStyle}>{tarea.owner_tarea || "-"}</td>
+                    <td style={tdStyle}>{tarea.estado_tarea || "-"}</td>
+                    <td style={tdStyle}>{tarea.situacion_tarea || "-"}</td>
+                    <td style={tdStyle}>{formatDate(tarea.fecha_inicio)}</td>
+                    <td style={tdStyle}>{formatDate(tarea.fecha_fin)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <section
