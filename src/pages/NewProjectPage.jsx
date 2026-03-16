@@ -106,12 +106,17 @@ export default function NewProjectPage() {
       maxWidth: "1120px"
     },
     card: {
-      background: "rgba(255,255,255,0.96)",
-      borderRadius: "20px",
-      boxShadow: "0 18px 45px rgba(15, 23, 42, 0.28)",
-      overflow: "hidden",
-      backdropFilter: "blur(10px)"
+      background: "#ffffff",
+      borderRadius: "8px",
+      border: "1px solid #e2e8f0"
     },
+    //card: {
+    //  background: "rgba(255,255,255,0.96)",
+    //  borderRadius: "20px",
+    //  boxShadow: "0 18px 45px rgba(15, 23, 42, 0.28)",
+    //  overflow: "hidden",
+    //  backdropFilter: "blur(10px)"
+    //},
     header: {
       padding: "18px 24px 12px 24px",
       background: "linear-gradient(135deg, #ffffff 0%, #ecfeff 100%)",
@@ -140,7 +145,7 @@ export default function NewProjectPage() {
       maxWidth: "760px"
     },
     content: {
-      padding: "16px 24px 20px 24px"
+      padding: "12px 20px 16px 20px" // padding: "16px 24px 20px 24px"
     },
     form: {
       display: "grid",
