@@ -1,13 +1,219 @@
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { supabase } from "../supabase";
+
+function formatCurrency(value) {
+  if (value === null || value === undefined) return "-";
+  return new Intl.NumberFormat("es-ES", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(Number(value));
+}
+
+function formatDate(value) {
+  if (!value) return "-";
+  return new Intl.DateTimeFormat("es-ES").format(new Date(value));
+}
+
+function InfoCard({ label, value }) {
+  return (
+    <div
+      style={{
+        background: "#ffffff",
+        border: "1px solid #e5e7eb",
+        borderRadius: "12px",
+        padding: "16px",
+      }}
+    >
+      <div
+        style={{
+          fontSize: "12px",
+          color: "#6b7280",
+          marginBottom: "6px",
+          textTransform: "uppercase",
+          letterSpacing: "0.04em",
+        }}
+      >
+        {label}
+      </div>
+      <div style={{ fontSize: "16px", fontWeight: 600, color: "#111827" }}>
+        {value || "-"}
+      </div>
+    </div>
+  );
+}
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
+  const [proyecto, setProyecto] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    async function loadProject() {
+      setLoading(true);
+      setErrorMsg("");
+
+      const { data, error } = await supabase
+        .from("proyectos")
+        .select(`
+          id_proyecto,
+          id_universo,
+          titulo,
+          descripcion,
+          beneficios,
+          inversion_estimada,
+          impacto_estimado,
+          owner,
+          fase,
+          situacion,
+          fecha_inicio,
+          fecha_fin,
+          universos_negocio (
+            nombre
+          )
+        `)
+        .eq("id_proyecto", id)
+        .single();
+
+      if (error) {
+        setErrorMsg(error.message || "No se pudo cargar el proyecto");
+        setProyecto(null);
+        setLoading(false);
+        return;
+      }
+
+      setProyecto(data);
+      setLoading(false);
+    }
+
+    loadProject();
+  }, [id]);
+
+  if (loading) {
+    return <p>Cargando proyecto...</p>;
+  }
+
+  if (errorMsg) {
+    return (
+      <div
+        style={{
+          background: "#ffffff",
+          border: "1px solid #fecaca",
+          color: "#b91c1c",
+          borderRadius: "12px",
+          padding: "16px",
+        }}
+      >
+        Error cargando el proyecto: {errorMsg}
+      </div>
+    );
+  }
+
+  if (!proyecto) {
+    return <p>No se ha encontrado el proyecto.</p>;
+  }
+
+  const nombreUniverso = proyecto.universos_negocio?.nombre || "-";
 
   return (
-    <div>
-      <h2>Detalle del Proyecto</h2>
-      <p>Proyecto: {id}</p>
-      <p>Ficha de proyecto en construcción.</p>
+    <div style={{ display: "grid", gap: "24px" }}>
+      <section
+        style={{
+          background: "#ffffff",
+          border: "1px solid #e5e7eb",
+          borderRadius: "16px",
+          padding: "24px",
+        }}
+      >
+        <div style={{ marginBottom: "20px" }}>
+          <div
+            style={{
+              fontSize: "13px",
+              color: "#6b7280",
+              marginBottom: "8px",
+            }}
+          >
+            {proyecto.id_proyecto}
+          </div>
+
+          <h2
+            style={{
+              margin: "0 0 12px 0",
+              fontSize: "28px",
+              color: "#111827",
+            }}
+          >
+            {proyecto.titulo}
+          </h2>
+
+          <p style={{ margin: "0 0 12px 0", color: "#374151", lineHeight: 1.5 }}>
+            {proyecto.descripcion || "Sin descripción"}
+          </p>
+
+          <p style={{ margin: 0, color: "#4b5563", lineHeight: 1.5 }}>
+            <strong>Beneficios:</strong> {proyecto.beneficios || "No informados"}
+          </p>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: "16px",
+          }}
+        >
+          <InfoCard label="Universo" value={nombreUniverso} />
+          <InfoCard label="Owner" value={proyecto.owner} />
+          <InfoCard label="Fase" value={proyecto.fase} />
+          <InfoCard label="Situación" value={proyecto.situacion} />
+          <InfoCard
+            label="Inversión estimada"
+            value={formatCurrency(proyecto.inversion_estimada)}
+          />
+          <InfoCard
+            label="Impacto estimado"
+            value={formatCurrency(proyecto.impacto_estimado)}
+          />
+          <InfoCard
+            label="Fecha de inicio"
+            value={formatDate(proyecto.fecha_inicio)}
+          />
+          <InfoCard
+            label="Fecha fin"
+            value={formatDate(proyecto.fecha_fin)}
+          />
+        </div>
+      </section>
+
+      <section
+        style={{
+          background: "#ffffff",
+          border: "1px solid #e5e7eb",
+          borderRadius: "16px",
+          padding: "24px",
+        }}
+      >
+        <h3 style={{ marginTop: 0 }}>Tareas del proyecto</h3>
+        <p style={{ marginBottom: 0, color: "#6b7280" }}>
+          Próximo paso: cargar aquí la tabla de tareas.
+        </p>
+      </section>
+
+      <section
+        style={{
+          background: "#ffffff",
+          border: "1px solid #e5e7eb",
+          borderRadius: "16px",
+          padding: "24px",
+        }}
+      >
+        <h3 style={{ marginTop: 0 }}>Costes del proyecto</h3>
+        <p style={{ marginBottom: 0, color: "#6b7280" }}>
+          Próximo paso: cargar aquí la tabla de costes.
+        </p>
+      </section>
     </div>
   );
 }
