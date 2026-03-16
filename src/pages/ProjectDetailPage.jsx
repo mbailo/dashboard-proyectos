@@ -132,7 +132,7 @@ export default function ProjectDetailPage() {
         .select(`
           id_coste,
           id_proyecto,
-          titulo_coste,
+          titulo,
           descripcion,
           tipo_coste,
           importe
@@ -348,7 +348,7 @@ export default function ProjectDetailPage() {
                 {costes.map((coste) => (
                   <tr key={coste.id_coste}>
                     <td style={tdStyle}>{coste.id_coste}</td>
-                    <td style={tdStyle}>{coste.titulo_coste || "-"}</td>
+                    <td style={tdStyle}>{coste.titulo || "-"}</td>
                     <td style={tdStyle}>{coste.descripcion || "-"}</td>
                     <td style={tdStyle}>{coste.tipo_coste || "-"}</td>
                     <td style={tdStyle}>{formatCurrency(coste.importe)}</td>
