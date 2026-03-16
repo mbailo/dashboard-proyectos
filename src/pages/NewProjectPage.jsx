@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import ReactDOM from "react-dom/client";
-import { supabase } from "./supabase";
+import { supabase } from "../supabase"; // cambia a ../supabase si el archivo está en /src
 
 export default function NewProjectPage() {
   const [universos, setUniversos] = useState([]);
@@ -352,7 +351,11 @@ export default function NewProjectPage() {
                 </div>
               </div>
 
-              {mensaje && <div style={{ ...styles.banner, ...bannerStyle }}>{mensaje}</div>}
+              {mensaje && (
+                <div style={{ ...styles.banner, ...bannerStyle }}>
+                  {mensaje}
+                </div>
+              )}
 
               <div style={styles.actions}>
                 <button type="submit" style={styles.button}>
@@ -365,11 +368,4 @@ export default function NewProjectPage() {
       </div>
     </div>
   );
-}
-
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
 }
