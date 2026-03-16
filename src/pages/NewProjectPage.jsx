@@ -1,9 +1,8 @@
-export default function NewProjectPage() {
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { supabase } from "./supabase";
 
-function App() {
+export default function NewProjectPage() {
   const [universos, setUniversos] = useState([]);
   const [mensaje, setMensaje] = useState("");
   const [tipoMensaje, setTipoMensaje] = useState("");
