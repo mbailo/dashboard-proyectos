@@ -63,6 +63,7 @@ export default function ProjectDetailPage() {
   const { id } = useParams();
   const [proyecto, setProyecto] = useState(null);
   const [tareas, setTareas] = useState([]);
+  const [costes, setCostes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -71,7 +72,7 @@ export default function ProjectDetailPage() {
       setLoading(true);
       setErrorMsg("");
 
-      const { data, error } = await supabase
+      const { data: proyectoData, error: proyectoError } = await supabase
         .from("proyectos")
         .select(`
           id_proyecto,
@@ -93,10 +94,11 @@ export default function ProjectDetailPage() {
         .eq("id_proyecto", id)
         .single();
 
-      if (error) {
-        setErrorMsg(error.message || "No se pudo cargar el proyecto");
+      if (proyectoError) {
+        setErrorMsg(proyectoError.message || "No se pudo cargar el proyecto");
         setProyecto(null);
         setTareas([]);
+        setCostes([]);
         setLoading(false);
         return;
       }
@@ -118,14 +120,38 @@ export default function ProjectDetailPage() {
 
       if (tareasError) {
         setErrorMsg(tareasError.message || "No se pudieron cargar las tareas");
-        setProyecto(data);
+        setProyecto(proyectoData);
         setTareas([]);
+        setCostes([]);
         setLoading(false);
         return;
       }
 
-      setProyecto(data);
+      const { data: costesData, error: costesError } = await supabase
+        .from("costes_proyecto")
+        .select(`
+          id_coste,
+          id_proyecto,
+          titulo_coste,
+          descripcion,
+          tipo_coste,
+          importe
+        `)
+        .eq("id_proyecto", id)
+        .order("id_coste", { ascending: true });
+
+      if (costesError) {
+        setErrorMsg(costesError.message || "No se pudieron cargar los costes");
+        setProyecto(proyectoData);
+        setTareas(tareasData || []);
+        setCostes([]);
+        setLoading(false);
+        return;
+      }
+
+      setProyecto(proyectoData);
       setTareas(tareasData || []);
+      setCostes(costesData || []);
       setLoading(false);
     }
 
@@ -295,9 +321,43 @@ export default function ProjectDetailPage() {
         }}
       >
         <h3 style={{ marginTop: 0 }}>Costes del proyecto</h3>
-        <p style={{ marginBottom: 0, color: "#6b7280" }}>
-          Próximo paso: cargar aquí la tabla de costes.
-        </p>
+
+        {costes.length === 0 ? (
+          <p style={{ marginBottom: 0, color: "#6b7280" }}>
+            Este proyecto todavía no tiene costes.
+          </p>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                marginTop: "12px",
+              }}
+            >
+              <thead>
+                <tr style={{ background: "#f9fafb" }}>
+                  <th style={thStyle}>Id Coste</th>
+                  <th style={thStyle}>Título</th>
+                  <th style={thStyle}>Descripción</th>
+                  <th style={thStyle}>Tipo</th>
+                  <th style={thStyle}>Importe</th>
+                </tr>
+              </thead>
+              <tbody>
+                {costes.map((coste) => (
+                  <tr key={coste.id_coste}>
+                    <td style={tdStyle}>{coste.id_coste}</td>
+                    <td style={tdStyle}>{coste.titulo_coste || "-"}</td>
+                    <td style={tdStyle}>{coste.descripcion || "-"}</td>
+                    <td style={tdStyle}>{coste.tipo_coste || "-"}</td>
+                    <td style={tdStyle}>{formatCurrency(coste.importe)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </div>
   );
