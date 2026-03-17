@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabase";
 
 function formatCurrency(value) {
@@ -182,6 +183,7 @@ function UniverseColumn({ universe, projects, onOpenProject }) {
 }
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [kpis, setKpis] = useState(null);
   const [universes, setUniverses] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -224,9 +226,8 @@ export default function DashboardPage() {
   }, [projects]);
 
   function handleOpenProject(project) {
-    console.log("Abrir proyecto:", project.id_proyecto);
-    // luego:
-    // navigate(`/proyecto/${project.id_proyecto}`);
+    // console.log("Abrir proyecto:", project.id_proyecto);
+    navigate(`/proyecto/${project.id_proyecto}`);
   }
 
   if (loading) {
