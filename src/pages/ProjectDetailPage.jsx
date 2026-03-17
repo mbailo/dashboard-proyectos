@@ -353,81 +353,276 @@ export default function ProjectDetailPage() {
 
   return (
     <div style={{ display: "grid", gap: "24px" }}>
-      <section
-        style={{
-          background: "#ffffff",
-          border: "1px solid #e5e7eb",
-          borderRadius: "16px",
-          padding: "24px",
-        }}
-      >
-        <div style={{ marginBottom: "20px" }}>
-          <div
-            style={{
-              fontSize: "13px",
-              color: "#6b7280",
-              marginBottom: "8px",
-            }}
-          >
-            {proyecto.id_proyecto}
-          </div>
-
-          <h2
-            style={{
-              margin: "0 0 12px 0",
-              fontSize: "28px",
-              color: "#111827",
-            }}
-          >
-            {proyecto.titulo}
-          </h2>
-
-          <p
-            style={{
-              margin: "0 0 12px 0",
-              color: "#374151",
-              lineHeight: 1.5,
-            }}
-          >
-            {proyecto.descripcion || "Sin descripción"}
-          </p>
-
-          <p style={{ margin: 0, color: "#4b5563", lineHeight: 1.5 }}>
-            <strong>Beneficios:</strong> {proyecto.beneficios || "No informados"}
-          </p>
-        </div>
-
-        <div
+        <section
           style={{
+            background: "#ffffff",
+            border: "1px solid #e5e7eb",
+            borderRadius: "16px",
+            padding: "20px",
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
             gap: "16px",
           }}
         >
-          <InfoCard label="Universo" value={nombreUniverso} />
-          <InfoCard label="Owner" value={proyecto.owner} />
-          <InfoCard label="Fase" value={proyecto.fase} />
-          <InfoCard label="Situación" value={proyecto.situacion} />
-          <InfoCard
-            label="Inversión estimada"
-            value={formatCurrency(proyecto.inversion_estimada)}
-          />
-          <InfoCard
-            label="Impacto estimado"
-            value={formatCurrency(proyecto.impacto_estimado)}
-          />
-          <InfoCard
-            label="Fecha de inicio"
-            value={formatDate(proyecto.fecha_inicio)}
-          />
-          <InfoCard
-            label="Fecha fin"
-            value={formatDate(proyecto.fecha_fin)}
-          />
-        </div>
-      </section>
-
-      <section
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              gap: "16px",
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ minWidth: "280px", flex: 1 }}>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "#6b7280",
+                  marginBottom: "6px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                {proyecto.id_proyecto} · {nombreUniverso}
+              </div>
+        
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: "26px",
+                  lineHeight: 1.15,
+                  color: "#111827",
+                }}
+              >
+                {proyecto.titulo}
+              </h2>
+            </div>
+        
+            <div
+              style={{
+                display: "flex",
+                gap: "8px",
+                flexWrap: "wrap",
+                justifyContent: "flex-end",
+              }}
+            >
+              <span
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: "999px",
+                  background: "#eff6ff",
+                  color: "#1d4ed8",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                }}
+              >
+                Owner: {proyecto.owner || "-"}
+              </span>
+        
+              <span
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: "999px",
+                  background: "#f3f4f6",
+                  color: "#374151",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                }}
+              >
+                Fase: {proyecto.fase || "-"}
+              </span>
+        
+              <span
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: "999px",
+                  background: "#f9fafb",
+                  color: "#374151",
+                  border: "1px solid #e5e7eb",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                }}
+              >
+                Situación: {proyecto.situacion || "-"}
+              </span>
+            </div>
+          </div>
+        
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: "12px",
+            }}
+          >
+            <div
+              style={{
+                background: "#f9fafb",
+                border: "1px solid #e5e7eb",
+                borderRadius: "12px",
+                padding: "12px 14px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: "#6b7280",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                  marginBottom: "4px",
+                }}
+              >
+                Inversión estimada
+              </div>
+              <div style={{ fontSize: "18px", fontWeight: 700, color: "#111827" }}>
+                {formatCurrency(proyecto.inversion_estimada)}
+              </div>
+            </div>
+        
+            <div
+              style={{
+                background: "#f9fafb",
+                border: "1px solid #e5e7eb",
+                borderRadius: "12px",
+                padding: "12px 14px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: "#6b7280",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                  marginBottom: "4px",
+                }}
+              >
+                Impacto estimado
+              </div>
+              <div style={{ fontSize: "18px", fontWeight: 700, color: "#111827" }}>
+                {formatCurrency(proyecto.impacto_estimado)}
+              </div>
+            </div>
+        
+            <div
+              style={{
+                background: "#f9fafb",
+                border: "1px solid #e5e7eb",
+                borderRadius: "12px",
+                padding: "12px 14px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: "#6b7280",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                  marginBottom: "4px",
+                }}
+              >
+                Fecha de inicio
+              </div>
+              <div style={{ fontSize: "16px", fontWeight: 600, color: "#111827" }}>
+                {formatDate(proyecto.fecha_inicio)}
+              </div>
+            </div>
+        
+            <div
+              style={{
+                background: "#f9fafb",
+                border: "1px solid #e5e7eb",
+                borderRadius: "12px",
+                padding: "12px 14px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: "#6b7280",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                  marginBottom: "4px",
+                }}
+              >
+                Fecha fin
+              </div>
+              <div style={{ fontSize: "16px", fontWeight: 600, color: "#111827" }}>
+                {formatDate(proyecto.fecha_fin)}
+              </div>
+            </div>
+          </div>
+        
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "16px",
+            }}
+          >
+            <div
+              style={{
+                background: "#ffffff",
+                border: "1px solid #e5e7eb",
+                borderRadius: "12px",
+                padding: "14px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "#6b7280",
+                  marginBottom: "8px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                Descripción del proyecto
+              </div>
+              <p
+                style={{
+                  margin: 0,
+                  color: "#374151",
+                  lineHeight: 1.45,
+                  fontSize: "14px",
+                }}
+              >
+                {proyecto.descripcion || "Sin descripción"}
+              </p>
+            </div>
+        
+            <div
+              style={{
+                background: "#ffffff",
+                border: "1px solid #e5e7eb",
+                borderRadius: "12px",
+                padding: "14px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "#6b7280",
+                  marginBottom: "8px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                Beneficios esperados
+              </div>
+              <p
+                style={{
+                  margin: 0,
+                  color: "#374151",
+                  lineHeight: 1.45,
+                  fontSize: "14px",
+                }}
+              >
+                {proyecto.beneficios || "No informados"}
+              </p>
+            </div>
+          </div>
+        </section>
+      
+        <section
         style={{
           background: "#ffffff",
           border: "1px solid #e5e7eb",
