@@ -227,7 +227,7 @@ export default function DashboardPage() {
 
   function handleOpenProject(project) {
     // console.log("Abrir proyecto:", project.id_proyecto);
-    navigate(`/proyecto/${project.id_proyecto}`);
+    navigate(`/proyectos/${project.id_proyecto}`);
   }
 
   if (loading) {
