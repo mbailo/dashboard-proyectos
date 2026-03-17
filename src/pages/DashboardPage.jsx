@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { supabase } from "../supabaseClient";
+import { supabase } from "../supabase";
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("es-ES", {
