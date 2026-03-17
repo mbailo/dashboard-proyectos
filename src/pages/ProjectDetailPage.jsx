@@ -119,6 +119,16 @@ export default function ProjectDetailPage() {
     fecha_fin: "",
   });
 
+  const [showCostForm, setShowCostForm] = useState(false);
+  const [savingCost, setSavingCost] = useState(false);
+  const [costErrorMsg, setCostErrorMsg] = useState("");
+  const [costForm, setCostForm] = useState({
+    titulo: "",
+    descripcion: "",
+    tipo_coste: "OpEx",
+    importe: "",
+  });
+
   async function loadProject(projectId) {
     const { data, error } = await supabase
       .from("proyectos")
@@ -229,6 +239,14 @@ export default function ProjectDetailPage() {
     }));
   }
 
+  function handleCostFormChange(e) {
+    const { name, value } = e.target;
+    setCostForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
   async function handleCreateTask(e) {
     e.preventDefault();
     setSavingTask(true);
@@ -267,6 +285,43 @@ export default function ProjectDetailPage() {
       setTareas(tareasActualizadas);
     } catch (err) {
       setTaskErrorMsg(err.message || "La tarea se creó, pero no se pudo recargar la tabla");
+    }
+  }
+
+  async function handleCreateCost(e) {
+    e.preventDefault();
+    setSavingCost(true);
+    setCostErrorMsg("");
+
+    const { error } = await supabase.rpc("crear_coste", {
+      p_id_proyecto: id,
+      p_titulo: costForm.titulo,
+      p_descripcion: costForm.descripcion || null,
+      p_tipo_coste: costForm.tipo_coste,
+      p_importe: costForm.importe === "" ? 0 : Number(costForm.importe),
+    });
+
+    if (error) {
+      setCostErrorMsg(error.message || "No se pudo crear el coste");
+      setSavingCost(false);
+      return;
+    }
+
+    setCostForm({
+      titulo: "",
+      descripcion: "",
+      tipo_coste: "OpEx",
+      importe: "",
+    });
+
+    setShowCostForm(false);
+    setSavingCost(false);
+
+    try {
+      const costesActualizados = await loadCostes(id);
+      setCostes(costesActualizados);
+    } catch (err) {
+      setCostErrorMsg(err.message || "El coste se creó, pero no se pudo recargar la tabla");
     }
   }
 
@@ -593,7 +648,145 @@ export default function ProjectDetailPage() {
           padding: "24px",
         }}
       >
-        <h3 style={{ marginTop: 0 }}>Costes del proyecto</h3>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "12px",
+            flexWrap: "wrap",
+            marginBottom: "16px",
+          }}
+        >
+          <h3 style={{ margin: 0 }}>Costes del proyecto</h3>
+
+          <button
+            type="button"
+            style={primaryButtonStyle}
+            onClick={() => {
+              setShowCostForm((prev) => !prev);
+              setCostErrorMsg("");
+            }}
+          >
+            {showCostForm ? "Cancelar" : "+ Nuevo coste"}
+          </button>
+        </div>
+
+        {showCostForm && (
+          <form
+            onSubmit={handleCreateCost}
+            style={{
+              border: "1px solid #e5e7eb",
+              borderRadius: "12px",
+              padding: "16px",
+              marginBottom: "20px",
+              background: "#f9fafb",
+            }}
+          >
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: "16px",
+              }}
+            >
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={labelStyle}>Título</label>
+                <input
+                  type="text"
+                  name="titulo"
+                  value={costForm.titulo}
+                  onChange={handleCostFormChange}
+                  style={inputStyle}
+                  required
+                />
+              </div>
+
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={labelStyle}>Descripción</label>
+                <textarea
+                  name="descripcion"
+                  value={costForm.descripcion}
+                  onChange={handleCostFormChange}
+                  style={{
+                    ...inputStyle,
+                    minHeight: "90px",
+                    resize: "vertical",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Tipo de coste</label>
+                <select
+                  name="tipo_coste"
+                  value={costForm.tipo_coste}
+                  onChange={handleCostFormChange}
+                  style={inputStyle}
+                >
+                  <option value="OpEx">OpEx</option>
+                  <option value="CapEx">CapEx</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Importe (€)</label>
+                <input
+                  type="number"
+                  name="importe"
+                  value={costForm.importe}
+                  onChange={handleCostFormChange}
+                  style={inputStyle}
+                  step="0.01"
+                />
+              </div>
+            </div>
+
+            {costErrorMsg && (
+              <div
+                style={{
+                  marginTop: "16px",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  background: "#fef2f2",
+                  border: "1px solid #fecaca",
+                  color: "#b91c1c",
+                  fontSize: "14px",
+                }}
+              >
+                {costErrorMsg}
+              </div>
+            )}
+
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                justifyContent: "flex-end",
+                marginTop: "16px",
+              }}
+            >
+              <button
+                type="button"
+                style={secondaryButtonStyle}
+                onClick={() => {
+                  setShowCostForm(false);
+                  setCostErrorMsg("");
+                }}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                style={primaryButtonStyle}
+                disabled={savingCost}
+              >
+                {savingCost ? "Guardando..." : "Guardar coste"}
+              </button>
+            </div>
+          </form>
+        )}
 
         {costes.length === 0 ? (
           <p style={{ marginBottom: 0, color: "#6b7280" }}>
