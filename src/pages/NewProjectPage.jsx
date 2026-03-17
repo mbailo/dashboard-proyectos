@@ -13,7 +13,6 @@ export default function NewProjectPage() {
     titulo: "",
     descripcion: "",
     beneficios: "",
-    inversion_estimada: "",
     impacto_estimado: "",
     owner: "",
     fecha_inicio: "",
@@ -56,8 +55,6 @@ export default function NewProjectPage() {
       p_titulo: form.titulo,
       p_descripcion: form.descripcion || null,
       p_beneficios: form.beneficios || null,
-      p_inversion_estimada:
-        form.inversion_estimada === "" ? 0 : Number(form.inversion_estimada),
       p_impacto_estimado:
         form.impacto_estimado === "" ? 0 : Number(form.impacto_estimado),
       p_owner: form.owner,
@@ -96,7 +93,6 @@ export default function NewProjectPage() {
 //      titulo: "",
 //      descripcion: "",
 //      beneficios: "",
-//      inversion_estimada: "",
 //      impacto_estimado: "",
 //      owner: "",
 //      fecha_inicio: "",
@@ -345,19 +341,6 @@ export default function NewProjectPage() {
               </div>
 
               <div style={styles.grid2}>
-                <div style={styles.field}>
-                  <label style={styles.label}>Inversión estimada (€)</label>
-                  <input
-                    type="number"
-                    name="inversion_estimada"
-                    value={form.inversion_estimada}
-                    onChange={handleChange}
-                    min="0"
-                    step="0.01"
-                    style={styles.input}
-                  />
-                </div>
-
                 <div style={styles.field}>
                   <label style={styles.label}>Impacto estimado (€)</label>
                   <input
