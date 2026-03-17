@@ -1,21 +1,3 @@
-import React from "react";
-import { useNavigate, useParams } from "react-router-dom";
-
-export default function ProjectDetailPage() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-
-  return (
-    <div style={{ padding: "24px", color: "#111" }}>
-      <button onClick={() => navigate("/")}>← Volver</button>
-      <h1>Ficha de Proyecto</h1>
-      <p>ID recibido: {id}</p>
-    </div>
-  );
-}
-
-
-/*
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "../supabase";
@@ -1041,4 +1023,3 @@ export default function ProjectDetailPage() {
     </div>
   );
 }
-*/
