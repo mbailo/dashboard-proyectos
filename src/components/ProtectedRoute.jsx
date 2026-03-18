@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
+import { supabase } from "../supabase";
 
 export default function ProtectedRoute({ children }) {
   const [session, setSession] = useState(undefined);
