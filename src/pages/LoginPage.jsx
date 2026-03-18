@@ -1,11 +1,33 @@
-import React, { useState } from "react";
-import { supabase } from "../supabase";
+import React, { useEffect, useState } from "react";
+import { supabase } from "../supabaseClient";
+import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+
+      if (data.session) {
+        navigate("/", { replace: true });
+      } else {
+        setCheckingSession(false);
+      }
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -24,8 +46,16 @@ export default function LoginPage() {
       return;
     }
 
-    window.location.href = "/";
+    navigate("/", { replace: true });
   };
+
+  if (checkingSession) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.card}>Cargando...</div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.page}>
