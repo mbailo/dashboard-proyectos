@@ -15,6 +15,7 @@ export default function NewProjectPage() {
     beneficios: "",
     impacto_estimado: "",
     owner: "",
+    horizonte: "",
     fecha_inicio: "",
     fecha_fin: ""
   });
@@ -58,6 +59,7 @@ export default function NewProjectPage() {
       p_impacto_estimado:
         form.impacto_estimado === "" ? 0 : Number(form.impacto_estimado),
       p_owner: form.owner,
+      p_horizonte: form.horizonte,
       p_fase: "En Definición",
       p_situacion: "En tiempo",
       p_fecha_inicio: form.fecha_inicio || null,
@@ -79,15 +81,17 @@ export default function NewProjectPage() {
         : Array.isArray(data)
         ? data[0]?.id_proyecto || data[0]?.id
         : data?.id_proyecto || data?.id;
-    
+
     if (!nuevoId) {
-      setMensaje("Proyecto creado, pero no se pudo obtener el identificador para redirigir.");
+      setMensaje(
+        "Proyecto creado, pero no se pudo obtener el identificador para redirigir."
+      );
       setTipoMensaje("warning");
       return;
     }
 
     navigate(`/proyectos/${nuevoId}`);
-    
+
 //    setForm({
 //      id_universo: "",
 //      titulo: "",
@@ -95,25 +99,26 @@ export default function NewProjectPage() {
 //      beneficios: "",
 //      impacto_estimado: "",
 //      owner: "",
+//      horizonte: "",
 //      fecha_inicio: "",
 //      fecha_fin: ""
 //    });
   }
 
   const styles = {
-  page: {
-    minHeight: "100vh",
-    margin: 0,
-    padding: "8px",
-    fontFamily:
-      "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    background: "#f1f5f9",
-    color: "#0f172a",
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "center",
-    boxSizing: "border-box"
-  },
+    page: {
+      minHeight: "100vh",
+      margin: 0,
+      padding: "8px",
+      fontFamily:
+        "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      background: "#f1f5f9",
+      color: "#0f172a",
+      display: "flex",
+      alignItems: "flex-start",
+      justifyContent: "center",
+      boxSizing: "border-box"
+    },
     shell: {
       width: "100%",
       maxWidth: "1120px"
@@ -123,13 +128,6 @@ export default function NewProjectPage() {
       borderRadius: "8px",
       border: "1px solid #e2e8f0"
     },
-    //card: {
-    //  background: "rgba(255,255,255,0.96)",
-    //  borderRadius: "20px",
-    //  boxShadow: "0 18px 45px rgba(15, 23, 42, 0.28)",
-    //  overflow: "hidden",
-    //  backdropFilter: "blur(10px)"
-    //},
     header: {
       padding: "18px 24px 12px 24px",
       background: "linear-gradient(135deg, #ffffff 0%, #ecfeff 100%)",
@@ -158,7 +156,7 @@ export default function NewProjectPage() {
       maxWidth: "760px"
     },
     content: {
-      padding: "12px 20px 16px 20px" // padding: "16px 24px 20px 24px"
+      padding: "12px 20px 16px 20px"
     },
     form: {
       display: "grid",
@@ -282,16 +280,33 @@ export default function NewProjectPage() {
                 </div>
               </div>
 
-              <div style={styles.field}>
-                <label style={styles.label}>Título del proyecto</label>
-                <input
-                  type="text"
-                  name="titulo"
-                  value={form.titulo}
-                  onChange={handleChange}
-                  required
-                  style={styles.input}
-                />
+              <div style={styles.grid2}>
+                <div style={styles.field}>
+                  <label style={styles.label}>Título del proyecto</label>
+                  <input
+                    type="text"
+                    name="titulo"
+                    value={form.titulo}
+                    onChange={handleChange}
+                    required
+                    style={styles.input}
+                  />
+                </div>
+
+                <div style={styles.field}>
+                  <label style={styles.label}>Horizonte</label>
+                  <select
+                    name="horizonte"
+                    value={form.horizonte}
+                    onChange={handleChange}
+                    required
+                    style={styles.input}
+                  >
+                    <option value="">Selecciona un horizonte</option>
+                    <option value="Quick-Win">Quick-Win</option>
+                    <option value="Mid-term">Mid-term</option>
+                  </select>
+                </div>
               </div>
 
               <div style={styles.grid2}>
