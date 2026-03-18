@@ -60,10 +60,10 @@ function KpiCard({ title, value }) {
       style={{
         background: "#ffffff",
         border: "1px solid #dbe4ee",
-        borderRadius: 16,
-        padding: "12px 14px",
-        boxShadow: "0 8px 24px rgba(15,23,42,0.06)",
-        minHeight: 82,
+        borderRadius: 14,
+        padding: "8px 12px",
+        boxShadow: "0 6px 18px rgba(15,23,42,0.05)",
+        minHeight: 62,
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
@@ -71,20 +71,23 @@ function KpiCard({ title, value }) {
     >
       <div
         style={{
-          fontSize: 11,
+          fontSize: 10,
           color: "#64748b",
-          marginBottom: 6,
-          lineHeight: 1.2,
+          marginBottom: 4,
+          lineHeight: 1.15,
         }}
       >
         {title}
       </div>
       <div
         style={{
-          fontSize: "clamp(18px, 2vw, 24px)",
+          fontSize: "clamp(16px, 1.5vw, 20px)",
           fontWeight: 700,
           color: "#0f172a",
-          lineHeight: 1.1,
+          lineHeight: 1.05,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
         }}
       >
         {value}
@@ -103,9 +106,9 @@ function ProjectMiniCard({ project, onOpenProject }) {
         background: "#ffffff",
         border: "1px solid #dbe4ee",
         borderRadius: 12,
-        padding: 10,
+        padding: 9,
         cursor: "pointer",
-        boxShadow: "0 4px 14px rgba(15,23,42,0.04)",
+        boxShadow: "0 4px 12px rgba(15,23,42,0.04)",
         transition: "transform 0.15s ease, box-shadow 0.15s ease",
       }}
     >
@@ -115,7 +118,7 @@ function ProjectMiniCard({ project, onOpenProject }) {
           justifyContent: "space-between",
           alignItems: "flex-start",
           gap: 8,
-          marginBottom: 6,
+          marginBottom: 5,
         }}
       >
         <div
@@ -123,7 +126,7 @@ function ProjectMiniCard({ project, onOpenProject }) {
             fontSize: 12,
             fontWeight: 600,
             color: "#0f172a",
-            lineHeight: 1.25,
+            lineHeight: 1.2,
             flex: 1,
           }}
         >
@@ -154,11 +157,11 @@ function ProjectMiniCard({ project, onOpenProject }) {
           alignItems: "center",
           justifyContent: "space-between",
           gap: 8,
-          marginBottom: 6,
+          marginBottom: 5,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontSize: 16, color: "#0f172a" }}>
+          <span style={{ fontSize: 15, color: "#0f172a" }}>
             {getHarveyBall(project.avance_pct)}
           </span>
           <span style={{ fontSize: 11, color: "#64748b" }}>
@@ -169,8 +172,8 @@ function ProjectMiniCard({ project, onOpenProject }) {
         <div
           title={project.situacion}
           style={{
-            width: 11,
-            height: 11,
+            width: 10,
+            height: 10,
             borderRadius: "999px",
             background: getStatusColor(project.situacion),
             boxShadow: `0 0 0 3px ${getStatusBg(project.situacion)}`,
@@ -186,7 +189,7 @@ function ProjectMiniCard({ project, onOpenProject }) {
           display: "flex",
           justifyContent: "space-between",
           gap: 8,
-          lineHeight: 1.2,
+          lineHeight: 1.15,
         }}
       >
         <span>{project.horizonte || "-"}</span>
@@ -202,19 +205,19 @@ function UniverseColumn({ universe, projects, onOpenProject }) {
   return (
     <div
       style={{
-        background: "rgba(255,255,255,0.78)",
+        background: "rgba(255,255,255,0.8)",
         border: "1px solid #dbe4ee",
-        borderRadius: 18,
-        padding: 12,
-        boxShadow: "0 12px 30px rgba(15,23,42,0.06)",
+        borderRadius: 16,
+        padding: 10,
+        boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
         backdropFilter: "blur(8px)",
         minWidth: 0,
       }}
     >
       <div
         style={{
-          marginBottom: 10,
-          paddingBottom: 8,
+          marginBottom: 8,
+          paddingBottom: 6,
           borderBottom: "1px solid #e2e8f0",
         }}
       >
@@ -222,15 +225,15 @@ function UniverseColumn({ universe, projects, onOpenProject }) {
           style={{
             margin: 0,
             color: "#0f172a",
-            fontSize: 18,
-            lineHeight: 1.2,
+            fontSize: 16,
+            lineHeight: 1.15,
           }}
         >
           {universe.universo}
         </h3>
       </div>
 
-      <div style={{ display: "grid", gap: 8, marginBottom: 10 }}>
+      <div style={{ display: "grid", gap: 7, marginBottom: 8 }}>
         {projects.length === 0 ? (
           <div
             style={{
@@ -261,14 +264,14 @@ function UniverseColumn({ universe, projects, onOpenProject }) {
           background: "#f8fbff",
           border: "1px solid #dbe4ee",
           borderRadius: 12,
-          padding: 10,
+          padding: 9,
         }}
       >
         <div
           style={{
-            fontSize: 10,
+            fontSize: 9,
             color: "#64748b",
-            marginBottom: 8,
+            marginBottom: 6,
             textTransform: "uppercase",
             letterSpacing: "0.04em",
           }}
@@ -276,12 +279,12 @@ function UniverseColumn({ universe, projects, onOpenProject }) {
           KPIs del universo
         </div>
 
-        <div style={{ display: "grid", gap: 6 }}>
+        <div style={{ display: "grid", gap: 5 }}>
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
-              fontSize: 12,
+              fontSize: 11,
               color: "#334155",
             }}
           >
@@ -293,7 +296,7 @@ function UniverseColumn({ universe, projects, onOpenProject }) {
             style={{
               display: "flex",
               justifyContent: "space-between",
-              fontSize: 12,
+              fontSize: 11,
               color: "#334155",
               gap: 8,
             }}
@@ -308,7 +311,7 @@ function UniverseColumn({ universe, projects, onOpenProject }) {
             style={{
               display: "flex",
               justifyContent: "space-between",
-              fontSize: 12,
+              fontSize: 11,
               color: "#334155",
               gap: 8,
             }}
@@ -385,7 +388,7 @@ export default function DashboardPage() {
       <div
         style={{
           minHeight: "100vh",
-          padding: 24,
+          padding: 20,
           background:
             "linear-gradient(180deg, #f7fafc 0%, #eef6f5 48%, #edf7fb 100%)",
           fontFamily:
@@ -402,7 +405,7 @@ export default function DashboardPage() {
     <div
       style={{
         minHeight: "100vh",
-        padding: "18px 20px",
+        padding: "14px 18px",
         background:
           "radial-gradient(circle at top left, #f8fbff 0%, #f3f8f7 34%, #eef5fb 68%, #f8fbff 100%)",
         fontFamily:
@@ -413,31 +416,30 @@ export default function DashboardPage() {
     >
       <div
         style={{
-          maxWidth: 1600,
+          maxWidth: 1800,
           margin: "0 auto",
         }}
       >
-        <div style={{ marginBottom: 18 }}>
+        <div style={{ marginBottom: 12 }}>
           <h1
             style={{
               margin: 0,
-              fontSize: "clamp(28px, 3vw, 34px)",
+              fontSize: "clamp(26px, 2.2vw, 32px)",
               color: "#0f172a",
-              lineHeight: 1.1,
+              lineHeight: 1.05,
             }}
           >
             Dashboard de Proyectos O2
           </h1>
           <p
             style={{
-              marginTop: 6,
+              marginTop: 4,
               marginBottom: 0,
               color: "#5b6b7f",
-              fontSize: 14,
+              fontSize: 13,
             }}
           >
-            Visión consolidada del portfolio por universo, avance, riesgo e
-            impacto económico.
+            Visión consolidada del portfolio por universo, avance, riesgo e impacto económico.
           </p>
         </div>
 
@@ -446,29 +448,20 @@ export default function DashboardPage() {
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-              gap: 12,
-              marginBottom: 18,
+              gap: 10,
+              marginBottom: 14,
             }}
           >
             <KpiCard title="Total Proyectos" value={kpis.total_proyectos} />
             <KpiCard title="Total Tareas" value={kpis.total_tareas} />
-            <KpiCard
-              title="Tareas Finalizadas"
-              value={kpis.tareas_finalizadas}
-            />
+            <KpiCard title="Tareas Finalizadas" value={kpis.tareas_finalizadas} />
             <KpiCard title="Avance (%)" value={`${kpis.avance_pct}%`} />
-            <KpiCard
-              title="E. Impacto Total"
-              value={formatCurrency(kpis.impacto_total)}
-            />
+            <KpiCard title="E. Impacto Total" value={formatCurrency(kpis.impacto_total)} />
             <KpiCard
               title="E. Inversión / Gasto Total"
               value={formatCurrency(kpis.inversion_total)}
             />
-            <KpiCard
-              title="E. Impacto QW"
-              value={formatCurrency(kpis.impacto_qw)}
-            />
+            <KpiCard title="E. Impacto QW" value={formatCurrency(kpis.impacto_qw)} />
             <KpiCard
               title="E. Inversión / Gasto QW"
               value={formatCurrency(kpis.inversion_qw)}
@@ -479,8 +472,8 @@ export default function DashboardPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: 12,
+            gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
+            gap: 10,
             alignItems: "start",
           }}
         >
