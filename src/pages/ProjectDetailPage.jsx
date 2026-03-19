@@ -168,6 +168,7 @@ export default function ProjectDetailPage() {
         id_tarea,
         id_proyecto,
         titulo,
+        descripcion,
         owner,
         estado_tarea,
         situacion,
@@ -812,6 +813,7 @@ export default function ProjectDetailPage() {
               <thead>
                 <tr style={{ background: "#f9fafb" }}>
                   <th style={thStyle}>Id Tarea</th>
+                  <th style={thStyle}>Título</th>
                   <th style={thStyle}>Descripción</th>
                   <th style={thStyle}>Owner</th>
                   <th style={thStyle}>Estado</th>
@@ -826,6 +828,7 @@ export default function ProjectDetailPage() {
                   <tr key={tarea.id_tarea}>
                     <td style={tdStyle}>{tarea.id_tarea}</td>
                     <td style={tdStyle}>{tarea.titulo || "-"}</td>
+                    <td style={tdStyle}>{tarea.descripcion || "-"}</td>
                     <td style={tdStyle}>{tarea.owner || "-"}</td>
                     <td style={tdStyle}>{tarea.estado_tarea || "-"}</td>
                     <td style={tdStyle}>{tarea.situacion || "-"}</td>
@@ -1044,6 +1047,291 @@ export default function ProjectDetailPage() {
           </div>
         )}
       </section>
+          {showEditModal && editingTask && (
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(15, 23, 42, 0.45)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px",
+          zIndex: 1000,
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "720px",
+            background: "#ffffff",
+            borderRadius: "16px",
+            border: "1px solid #e5e7eb",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
+            padding: "24px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "20px",
+            }}
+          >
+            <div>
+              <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>
+                {editingTask.id_tarea}
+              </div>
+              <h3 style={{ margin: 0, color: "#111827" }}>Editar tarea</h3>
+            </div>
+    
+            <button
+              onClick={() => setShowEditModal(false)}
+              style={{
+                background: "transparent",
+                border: "none",
+                fontSize: "24px",
+                cursor: "pointer",
+                color: "#6b7280",
+                lineHeight: 1,
+              }}
+            >
+              ×
+            </button>
+          </div>
+    
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "16px",
+            }}
+          >
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "#374151",
+                  marginBottom: "6px",
+                }}
+              >
+                Título
+              </label>
+              <input
+                type="text"
+                value={editingTask.titulo || ""}
+                onChange={(e) =>
+                  setEditingTask({ ...editingTask, titulo: e.target.value })
+                }
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  borderRadius: "10px",
+                  border: "1px solid #d1d5db",
+                  fontSize: "14px",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+    
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "#374151",
+                  marginBottom: "6px",
+                }}
+              >
+                Owner
+              </label>
+              <input
+                type="text"
+                value={editingTask.owner || ""}
+                onChange={(e) =>
+                  setEditingTask({ ...editingTask, owner: e.target.value })
+                }
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  borderRadius: "10px",
+                  border: "1px solid #d1d5db",
+                  fontSize: "14px",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+    
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "#374151",
+                  marginBottom: "6px",
+                }}
+              >
+                Estado
+              </label>
+              <select
+                value={editingTask.estado_tarea || "No Iniciada"}
+                onChange={(e) =>
+                  setEditingTask({ ...editingTask, estado_tarea: e.target.value })
+                }
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  borderRadius: "10px",
+                  border: "1px solid #d1d5db",
+                  fontSize: "14px",
+                  boxSizing: "border-box",
+                  background: "#ffffff",
+                }}
+              >
+                <option value="No Iniciada">No Iniciada</option>
+                <option value="Planificada">Planificada</option>
+                <option value="En curso">En curso</option>
+                <option value="Finalizada">Finalizada</option>
+              </select>
+            </div>
+    
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "#374151",
+                  marginBottom: "6px",
+                }}
+              >
+                Situación
+              </label>
+              <select
+                value={editingTask.situacion || "En tiempo"}
+                onChange={(e) =>
+                  setEditingTask({ ...editingTask, situacion: e.target.value })
+                }
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  borderRadius: "10px",
+                  border: "1px solid #d1d5db",
+                  fontSize: "14px",
+                  boxSizing: "border-box",
+                  background: "#ffffff",
+                }}
+              >
+                <option value="En tiempo">En tiempo</option>
+                <option value="Riesgo de retraso">Riesgo de retraso</option>
+                <option value="Retrasado">Retrasado</option>
+              </select>
+            </div>
+    
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "#374151",
+                  marginBottom: "6px",
+                }}
+              >
+                Fecha inicio
+              </label>
+              <input
+                type="date"
+                value={editingTask.fecha_inicio || ""}
+                onChange={(e) =>
+                  setEditingTask({ ...editingTask, fecha_inicio: e.target.value })
+                }
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  borderRadius: "10px",
+                  border: "1px solid #d1d5db",
+                  fontSize: "14px",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+    
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "#374151",
+                  marginBottom: "6px",
+                }}
+              >
+                Fecha fin
+              </label>
+              <input
+                type="date"
+                value={editingTask.fecha_fin || ""}
+                onChange={(e) =>
+                  setEditingTask({ ...editingTask, fecha_fin: e.target.value })
+                }
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  borderRadius: "10px",
+                  border: "1px solid #d1d5db",
+                  fontSize: "14px",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+          </div>
+    
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: "12px",
+              marginTop: "24px",
+            }}
+          >
+            <button
+              onClick={() => setShowEditModal(false)}
+              style={{
+                background: "#f3f4f6",
+                color: "#111827",
+                border: "1px solid #d1d5db",
+                borderRadius: "10px",
+                padding: "10px 16px",
+                cursor: "pointer",
+                fontWeight: 600,
+              }}
+            >
+              Cancelar
+            </button>
+    
+            <button
+              style={{
+                background: "#2563eb",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "10px",
+                padding: "10px 16px",
+                cursor: "pointer",
+                fontWeight: 600,
+              }}
+            >
+              Guardar cambios
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 }
