@@ -26,14 +26,14 @@ function getStatusColor(situacion) {
   return "#94a3b8";
 }
 
-function getStatusBg(situacion) {
+ getStatusBg(situacion) {
   if (situacion === "En tiempo") return "#dcfce7";
   if (situacion === "Riesgo de retraso") return "#fef3c7";
   if (situacion === "Retrasado") return "#fee2e2";
   return "#e2e8f0";
 }
 
-function sortProjects(projects) {
+ sortProjects(projects) {
   const priority = {
     Retrasado: 1,
     "Riesgo de retraso": 2,
@@ -334,37 +334,46 @@ export default function DashboardPage() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [showUniverseModal, setShowUniverseModal] = useState(false);
+  const [savingUniverse, setSavingUniverse] = useState(false);
+  const [universeError, setUniverseError] = useState("");
+  const [newUniverse, setNewUniverse] = useState({
+    nombre: "",
+    codigo_universo: "",
+    descripcion: "",
+  });
+  
+  async function loadData() {
+    setLoading(true);
+  
+    const [
+      { data: kpisData, error: kpisError },
+      { data: universeData, error: universeError },
+      { data: projectsData, error: projectsError },
+    ] = await Promise.all([
+      supabase.from("v_dashboard_kpis_globales").select("*").single(),
+      supabase.from("v_dashboard_universos_kpi").select("*").order("universo"),
+      supabase
+        .from("v_dashboard_proyectos")
+        .select("*")
+        .order("universo")
+        .order("titulo"),
+    ]);
+  
+    if (kpisError) console.error(kpisError);
+    if (universeError) console.error(universeError);
+    if (projectsError) console.error(projectsError);
+  
+    setKpis(kpisData || null);
+    setUniverses(universeData || []);
+    setProjects(projectsData || []);
+    setLoading(false);
+  }
+  
   useEffect(() => {
-    async function loadData() {
-      setLoading(true);
-
-      const [
-        { data: kpisData, error: kpisError },
-        { data: universeData, error: universeError },
-        { data: projectsData, error: projectsError },
-      ] = await Promise.all([
-        supabase.from("v_dashboard_kpis_globales").select("*").single(),
-        supabase.from("v_dashboard_universos_kpi").select("*").order("universo"),
-        supabase
-          .from("v_dashboard_proyectos")
-          .select("*")
-          .order("universo")
-          .order("titulo"),
-      ]);
-
-      if (kpisError) console.error(kpisError);
-      if (universeError) console.error(universeError);
-      if (projectsError) console.error(projectsError);
-
-      setKpis(kpisData || null);
-      setUniverses(universeData || []);
-      setProjects(projectsData || []);
-      setLoading(false);
-    }
-
     loadData();
-  }, []);
-
+  }, []);  
+  
   const projectsByUniverse = useMemo(() => {
     const map = {};
     for (const project of projects) {
@@ -401,6 +410,41 @@ export default function DashboardPage() {
     );
   }
 
+async function handleCreateUniverse(e) {
+  e.preventDefault();
+  setUniverseError("");
+  setSavingUniverse(true);
+
+  try {
+    const payload = {
+      nombre: newUniverse.nombre.trim(),
+      codigo_universo: newUniverse.codigo_universo.trim().toUpperCase(),
+      descripcion: newUniverse.descripcion.trim() || null,
+    };
+
+    const { error } = await supabase.from("universos_negocio").insert([payload]);
+
+    if (error) throw error;
+
+    setNewUniverse({
+      nombre: "",
+      codigo_universo: "",
+      descripcion: "",
+    });
+
+    setShowUniverseModal(false);
+    await loadData();
+  } catch (err) {
+    if (err?.message?.includes("duplicate key")) {
+      setUniverseError("El código de universo ya existe.");
+    } else {
+      setUniverseError(err.message || "No se pudo crear el universo.");
+    }
+  } finally {
+    setSavingUniverse(false);
+  }
+}
+  
   return (
     <div
       style={{
@@ -420,29 +464,61 @@ export default function DashboardPage() {
           margin: "0 auto",
         }}
       >
-        <div style={{ marginBottom: 12 }}>
-          <h1
-            style={{
-              margin: 0,
-              fontSize: "clamp(26px, 2.2vw, 32px)",
-              color: "#0f172a",
-              lineHeight: 1.05,
+      
+        <div
+          style={{
+            marginBottom: 12,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <div>
+            <h1
+              style={{
+                margin: 0,
+                fontSize: "clamp(26px, 2.2vw, 32px)",
+                color: "#0f172a",
+                lineHeight: 1.05,
+              }}
+            >
+              Dashboard de Proyectos O2
+            </h1>
+            <p
+              style={{
+                marginTop: 4,
+                marginBottom: 0,
+                color: "#5b6b7f",
+                fontSize: 13,
+              }}
+            >
+              Visión consolidada del portfolio por universo, avance, riesgo e impacto económico.
+            </p>
+          </div>
+        
+          <button
+            onClick={() => {
+              setUniverseError("");
+              setShowUniverseModal(true);
             }}
-          >
-            Dashboard de Proyectos O2
-          </h1>
-          <p
             style={{
-              marginTop: 4,
-              marginBottom: 0,
-              color: "#5b6b7f",
+              border: "1px solid #0f766e",
+              background: "#0f766e",
+              color: "#ffffff",
+              borderRadius: 10,
+              padding: "10px 14px",
               fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              boxShadow: "0 8px 18px rgba(15,118,110,0.18)",
             }}
           >
-            Visión consolidada del portfolio por universo, avance, riesgo e impacto económico.
-          </p>
+            + Nuevo universo
+          </button>
         </div>
-
+        
         {kpis && (
           <div
             style={{
@@ -487,6 +563,221 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
+
+    {showUniverseModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(15, 23, 42, 0.35)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 20,
+      zIndex: 1000,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 520,
+        background: "#ffffff",
+        borderRadius: 18,
+        border: "1px solid #dbe4ee",
+        boxShadow: "0 20px 50px rgba(15,23,42,0.18)",
+        padding: 22,
+      }}
+    >
+      <h3
+        style={{
+          marginTop: 0,
+          marginBottom: 6,
+          color: "#0f172a",
+        }}
+      >
+        Nuevo universo
+      </h3>
+
+      <p
+        style={{
+          marginTop: 0,
+          marginBottom: 18,
+          fontSize: 13,
+          color: "#64748b",
+        }}
+      >
+        Crea un nuevo universo para que aparezca como una nueva columna en el dashboard.
+      </p>
+
+      <form onSubmit={handleCreateUniverse}>
+        <div style={{ display: "grid", gap: 14 }}>
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#334155",
+                marginBottom: 6,
+              }}
+            >
+              Nombre
+            </label>
+            <input
+              type="text"
+              value={newUniverse.nombre}
+              onChange={(e) =>
+                setNewUniverse((prev) => ({ ...prev, nombre: e.target.value }))
+              }
+              required
+              style={{
+                width: "100%",
+                boxSizing: "border-box",
+                border: "1px solid #cbd5e1",
+                borderRadius: 10,
+                padding: "10px 12px",
+                fontSize: 14,
+                outline: "none",
+              }}
+            />
+          </div>
+
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#334155",
+                marginBottom: 6,
+              }}
+            >
+              Código universo
+            </label>
+            <input
+              type="text"
+              maxLength={2}
+              value={newUniverse.codigo_universo}
+              onChange={(e) =>
+                setNewUniverse((prev) => ({
+                  ...prev,
+                  codigo_universo: e.target.value.toUpperCase(),
+                }))
+              }
+              required
+              style={{
+                width: "100%",
+                boxSizing: "border-box",
+                border: "1px solid #cbd5e1",
+                borderRadius: 10,
+                padding: "10px 12px",
+                fontSize: 14,
+                outline: "none",
+                textTransform: "uppercase",
+              }}
+            />
+          </div>
+
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#334155",
+                marginBottom: 6,
+              }}
+            >
+              Descripción
+            </label>
+            <textarea
+              rows={3}
+              value={newUniverse.descripcion}
+              onChange={(e) =>
+                setNewUniverse((prev) => ({
+                  ...prev,
+                  descripcion: e.target.value,
+                }))
+              }
+              style={{
+                width: "100%",
+                boxSizing: "border-box",
+                border: "1px solid #cbd5e1",
+                borderRadius: 10,
+                padding: "10px 12px",
+                fontSize: 14,
+                outline: "none",
+                resize: "vertical",
+              }}
+            />
+          </div>
+        </div>
+
+        {universeError ? (
+          <div
+            style={{
+              marginTop: 14,
+              padding: "10px 12px",
+              borderRadius: 10,
+              background: "#fef2f2",
+              border: "1px solid #fecaca",
+              color: "#b91c1c",
+              fontSize: 13,
+            }}
+          >
+            {universeError}
+          </div>
+        ) : null}
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 10,
+            marginTop: 18,
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setShowUniverseModal(false);
+              setUniverseError("");
+            }}
+            style={{
+              border: "1px solid #cbd5e1",
+              background: "#ffffff",
+              color: "#334155",
+              borderRadius: 10,
+              padding: "10px 14px",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            disabled={savingUniverse}
+            style={{
+              border: "1px solid #0f766e",
+              background: savingUniverse ? "#99f6e4" : "#0f766e",
+              color: "#ffffff",
+              borderRadius: 10,
+              padding: "10px 14px",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: savingUniverse ? "default" : "pointer",
+            }}
+          >
+            {savingUniverse ? "Guardando..." : "Crear universo"}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
     </div>
   );
 }
