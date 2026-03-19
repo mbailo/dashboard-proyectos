@@ -106,6 +106,8 @@ export default function ProjectDetailPage() {
   const [costes, setCostes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
+  const [editingTask, setEditingTask] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [savingTask, setSavingTask] = useState(false);
@@ -816,6 +818,7 @@ export default function ProjectDetailPage() {
                   <th style={thStyle}>Situación</th>
                   <th style={thStyle}>Inicio</th>
                   <th style={thStyle}>Fin</th>
+                  <th style={thStyle}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -828,6 +831,26 @@ export default function ProjectDetailPage() {
                     <td style={tdStyle}>{tarea.situacion || "-"}</td>
                     <td style={tdStyle}>{formatDate(tarea.fecha_inicio)}</td>
                     <td style={tdStyle}>{formatDate(tarea.fecha_fin)}</td>
+                    <td style={tdStyle}>
+                    <button
+                        onClick={() => {
+                          setEditingTask(tarea);
+                          setShowEditModal(true);
+                        }}
+                        style={{
+                          background: "#2563eb",
+                          color: "#ffffff",
+                          border: "none",
+                          borderRadius: "8px",
+                          padding: "8px 12px",
+                          cursor: "pointer",
+                          fontSize: "13px",
+                          fontWeight: 600,
+                        }}
+                    >
+                        Editar
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
