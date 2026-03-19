@@ -26,14 +26,14 @@ function getStatusColor(situacion) {
   return "#94a3b8";
 }
 
- getStatusBg(situacion) {
+function getStatusBg(situacion) {
   if (situacion === "En tiempo") return "#dcfce7";
   if (situacion === "Riesgo de retraso") return "#fef3c7";
   if (situacion === "Retrasado") return "#fee2e2";
   return "#e2e8f0";
 }
 
- sortProjects(projects) {
+function sortProjects(projects) {
   const priority = {
     Retrasado: 1,
     "Riesgo de retraso": 2,
@@ -392,24 +392,6 @@ export default function DashboardPage() {
     navigate(`/proyectos/${project.id_proyecto}`);
   }
 
-  if (loading) {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          padding: 20,
-          background:
-            "linear-gradient(180deg, #f7fafc 0%, #eef6f5 48%, #edf7fb 100%)",
-          fontFamily:
-            "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-          color: "#0f172a",
-        }}
-      >
-        Cargando dashboard...
-      </div>
-    );
-  }
-
 async function handleCreateUniverse(e) {
   e.preventDefault();
   setUniverseError("");
@@ -444,6 +426,24 @@ async function handleCreateUniverse(e) {
     setSavingUniverse(false);
   }
 }
+
+    if (loading) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          padding: 20,
+          background:
+            "linear-gradient(180deg, #f7fafc 0%, #eef6f5 48%, #edf7fb 100%)",
+          fontFamily:
+            "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          color: "#0f172a",
+        }}
+      >
+        Cargando dashboard...
+      </div>
+    );
+  }
   
   return (
     <div
