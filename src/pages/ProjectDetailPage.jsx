@@ -1136,7 +1136,38 @@ export default function ProjectDetailPage() {
                 }}
               />
             </div>
-    
+
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "#374151",
+                  marginBottom: "6px",
+                }}
+              >
+                Descripción
+              </label>
+              <textarea
+                value={editingTask.descripcion || ""}
+                onChange={(e) =>
+                  setEditingTask({ ...editingTask, descripcion: e.target.value })
+                }
+                rows={4}
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  borderRadius: "10px",
+                  border: "1px solid #d1d5db",
+                  fontSize: "14px",
+                  boxSizing: "border-box",
+                  resize: "vertical",
+                  fontFamily: "inherit",
+                }}
+              />
+            </div>
+            
             <div>
               <label
                 style={{
