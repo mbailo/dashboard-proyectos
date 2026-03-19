@@ -352,7 +352,7 @@ export default function DashboardPage() {
       { data: projectsData, error: projectsError },
     ] = await Promise.all([
       supabase.from("v_dashboard_kpis_globales").select("*").single(),
-      supabase.from("v_dashboard_universos_kpi").select("*").order("universo"),
+      supabase.from("v_dashboard_universos_kpi").select("*").order("id_universo", { ascending: true }),
       supabase
         .from("v_dashboard_proyectos")
         .select("*")
