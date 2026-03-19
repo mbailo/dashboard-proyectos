@@ -173,7 +173,8 @@ export default function ProjectDetailPage() {
         fecha_fin
       `)
       .eq("id_proyecto", projectId)
-      .order("id_tarea", { ascending: true });
+      .order("fecha_inicio", { ascending: true })
+      .order("fecha_fin", { ascending: true });
 
     if (error) {
       throw new Error(error.message || "No se pudieron cargar las tareas");
