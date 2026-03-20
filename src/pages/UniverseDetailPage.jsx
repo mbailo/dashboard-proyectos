@@ -173,8 +173,7 @@ function buildTimeline(projects) {
       key: `${cursor.getFullYear()}-${cursor.getMonth()}`,
       label: cursor.toLocaleDateString("es-ES", {
         month: "short",
-        year: "numeric",
-      }),
+      }).replace('.', '') + "'" + String(cursor.getFullYear()).slice(-2),
       leftPct: (diffDays(start, monthStart) / totalDays) * 100,
       widthPct: ((diffDays(monthStart, monthEnd) + 1) / totalDays) * 100,
     });
@@ -476,7 +475,6 @@ export default function UniverseDetailPage() {
             </button>
 
             <div style={styles.titleBlock}>
-              <p style={styles.eyebrow}>Detalle de universo</p>
               <h1 style={styles.title}>{kpis.nombre_universo}</h1>
               <p style={styles.description}>
                 {kpis.descripcion_universo || "Sin descripción informada."}
@@ -641,82 +639,78 @@ export default function UniverseDetailPage() {
 const styles = {
   page: {
     minHeight: "100vh",
-    padding: "18px 24px 24px",
+    padding: "14px 16px 20px",
     background: "linear-gradient(180deg, #f8fbff 0%, #f4f7fb 38%, #eef4f8 100%)",
     boxSizing: "border-box",
   },
   container: {
-    maxWidth: 1440,
+    width: "100%",
+    maxWidth: 1360,
     margin: "0 auto",
     display: "grid",
-    gap: 14,
+    gap: 12,
+    justifyItems: "stretch",
   },
   summaryCard: {
+    width: "100%",
     background: "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(246,250,255,0.98) 100%)",
     border: "1px solid #dbe4ee",
     borderRadius: 20,
-    padding: 16,
-    boxShadow: "0 12px 28px rgba(15, 23, 42, 0.07)",
+    padding: 12,
+    boxShadow: "0 10px 22px rgba(15, 23, 42, 0.06)",
   },
   summaryHeader: {
     display: "grid",
     gridTemplateColumns: "auto 1fr",
     alignItems: "start",
-    gap: 12,
-    marginBottom: 12,
+    gap: 10,
+    marginBottom: 10,
   },
   titleBlock: {
     minWidth: 0,
   },
-  eyebrow: {
-    margin: 0,
-    fontSize: 11,
-    fontWeight: 700,
-    letterSpacing: "0.08em",
-    textTransform: "uppercase",
-    color: "#64748b",
-  },
   title: {
-    margin: "4px 0 6px 0",
-    fontSize: 28,
+    margin: "0 0 4px 0",
+    fontSize: 24,
     lineHeight: 1.05,
     color: "#0f172a",
   },
   description: {
     margin: 0,
     maxWidth: 980,
-    fontSize: 14,
-    lineHeight: 1.45,
+    fontSize: 13,
+    lineHeight: 1.35,
     color: "#475569",
   },
   kpiGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-    gap: 10,
+    gap: 8,
   },
   kpiCard: {
-    minHeight: 78,
+    minHeight: 68,
     borderRadius: 16,
     border: "1px solid #dbe4ee",
     background: "rgba(255,255,255,0.88)",
-    padding: "12px 14px",
+    padding: "10px 12px",
     display: "flex",
     flexDirection: "column",
     justifyContent: "space-between",
     backdropFilter: "blur(8px)",
   },
   kpiLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#64748b",
     lineHeight: 1.25,
   },
   kpiValue: {
-    fontSize: 22,
+    fontSize: 19,
     lineHeight: 1.05,
     fontWeight: 700,
     color: "#0f172a",
   },
   ganttCard: {
+    width: "100%",
     background: "rgba(255,255,255,0.92)",
     border: "1px solid #dbe4ee",
     borderRadius: 20,
@@ -776,7 +770,7 @@ const styles = {
     background: "#f8fafc",
   },
   ganttProjectHeader: {
-    padding: "12px 14px",
+    padding: "10px 12px",
     fontSize: 12,
     fontWeight: 700,
     letterSpacing: "0.04em",
@@ -790,7 +784,7 @@ const styles = {
     borderRight: "1px solid #e2e8f0",
   },
   ganttStatusHeader: {
-    padding: "12px 14px",
+    padding: "10px 12px",
     fontSize: 12,
     fontWeight: 700,
     letterSpacing: "0.04em",
@@ -935,6 +929,7 @@ const styles = {
     background: "#f8fafc",
   },
   tableCard: {
+    width: "100%",
     background: "rgba(255,255,255,0.92)",
     border: "1px solid #dbe4ee",
     borderRadius: 20,
