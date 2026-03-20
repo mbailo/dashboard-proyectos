@@ -29,6 +29,14 @@ function startOfDay(date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
+function startOfMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function endOfMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+}
+
 function diffDays(start, end) {
   const msPerDay = 24 * 60 * 60 * 1000;
   return Math.round((startOfDay(end) - startOfDay(start)) / msPerDay);
@@ -132,15 +140,6 @@ function getTrafficLight(project) {
   };
 }
 
-function getHarveyBall(avance) {
-  const pct = Number(avance || 0);
-  if (pct <= 0) return "○";
-  if (pct < 25) return "◔";
-  if (pct < 50) return "◑";
-  if (pct < 75) return "◕";
-  return "●";
-}
-
 function buildTimeline(projects) {
   const fixedStart = new Date(2026, 0, 1);
   const fixedEnd = new Date(2026, 11, 31);
@@ -156,18 +155,19 @@ function buildTimeline(projects) {
     ? new Date(Math.max(...validEnds.map((d) => d.getTime())))
     : fixedEnd;
 
-  const start = minProjectStart < fixedStart ? minProjectStart : fixedStart;
-  const end = maxProjectEnd > fixedEnd ? maxProjectEnd : fixedEnd;
+  const rawStart = minProjectStart < fixedStart ? minProjectStart : fixedStart;
+  const rawEnd = maxProjectEnd > fixedEnd ? maxProjectEnd : fixedEnd;
 
+  const start = startOfMonth(rawStart);
+  const end = endOfMonth(rawEnd);
   const totalDays = Math.max(1, diffDays(start, end) + 1);
 
   const months = [];
   let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
 
   while (cursor <= end) {
-    const monthStart = cursor < start ? start : new Date(cursor);
+    const monthStart = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
     const monthEnd = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0);
-    const boundedMonthEnd = monthEnd > end ? end : monthEnd;
 
     months.push({
       key: `${cursor.getFullYear()}-${cursor.getMonth()}`,
@@ -176,7 +176,7 @@ function buildTimeline(projects) {
         year: "numeric",
       }),
       leftPct: (diffDays(start, monthStart) / totalDays) * 100,
-      widthPct: ((diffDays(monthStart, boundedMonthEnd) + 1) / totalDays) * 100,
+      widthPct: ((diffDays(monthStart, monthEnd) + 1) / totalDays) * 100,
     });
 
     cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
@@ -353,13 +353,7 @@ function KpiCard({ label, value, accent }) {
 
 function ProgressCell({ avance }) {
   const pct = Number(avance || 0);
-
-  return (
-    <div style={styles.progressWrap}>
-      <span style={styles.progressBall}>{getHarveyBall(pct)}</span>
-      <span style={styles.progressText}>{pct}%</span>
-    </div>
-  );
+  return <span style={styles.progressText}>{pct}%</span>;
 }
 
 export default function UniverseDetailPage() {
@@ -556,7 +550,7 @@ export default function UniverseDetailPage() {
                   <th style={styles.th}>Fecha inicio</th>
                   <th style={styles.th}>Fecha fin</th>
                   <th style={styles.th}>Fase</th>
-                  <th style={styles.th}>Situación</th>
+                  <th style={styles.th}>Estado</th>
                   <th style={styles.th}>Avance</th>
                   <th style={{ ...styles.th, textAlign: "right" }}>Impacto estimado</th>
                   <th style={{ ...styles.th, textAlign: "right" }}>Inversión estimada</th>
@@ -1041,20 +1035,10 @@ const styles = {
     fontWeight: 700,
     whiteSpace: "nowrap",
   },
-  progressWrap: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 6,
-  },
-  progressBall: {
-    fontSize: 15,
-    color: "#0f172a",
-    lineHeight: 1,
-  },
   progressText: {
-    fontSize: 11,
-    color: "#64748b",
-    fontWeight: 600,
+    fontSize: 12,
+    color: "#334155",
+    fontWeight: 700,
   },
   primaryButton: {
     border: "none",
