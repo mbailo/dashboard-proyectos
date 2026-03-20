@@ -639,20 +639,19 @@ export default function UniverseDetailPage() {
 const styles = {
   page: {
     minHeight: "100vh",
-    padding: "14px 16px 20px",
+    padding: "18px 24px 24px",
     background: "linear-gradient(180deg, #f8fbff 0%, #f4f7fb 38%, #eef4f8 100%)",
     boxSizing: "border-box",
   },
   container: {
-    width: "100%",
-    maxWidth: 1360,
+    maxWidth: 1440,
     margin: "0 auto",
     display: "grid",
-    gap: 12,
-    justifyItems: "stretch",
+    gap: 14,
   },
   summaryCard: {
     width: "100%",
+    margin: "0 auto",
     background: "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(246,250,255,0.98) 100%)",
     border: "1px solid #dbe4ee",
     borderRadius: 20,
@@ -711,6 +710,7 @@ const styles = {
   },
   ganttCard: {
     width: "100%",
+    margin: "0 auto",
     background: "rgba(255,255,255,0.92)",
     border: "1px solid #dbe4ee",
     borderRadius: 20,
@@ -754,10 +754,12 @@ const styles = {
     display: "inline-block",
   },
   ganttScroll: {
+    width: "100%",
     overflowX: "auto",
   },
   ganttBoard: {
     minWidth: 1220,
+    margin: "0 auto",
     border: "1px solid #e2e8f0",
     borderRadius: 16,
     overflow: "hidden",
@@ -930,6 +932,7 @@ const styles = {
   },
   tableCard: {
     width: "100%",
+    margin: "0 auto",
     background: "rgba(255,255,255,0.92)",
     border: "1px solid #dbe4ee",
     borderRadius: 20,
@@ -955,11 +958,13 @@ const styles = {
     color: "#64748b",
   },
   tableWrapper: {
+    width: "100%",
     overflowX: "auto",
   },
   table: {
     width: "100%",
     minWidth: 1300,
+    margin: "0 auto",
     borderCollapse: "separate",
     borderSpacing: 0,
   },
