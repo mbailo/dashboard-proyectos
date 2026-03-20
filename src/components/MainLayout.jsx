@@ -26,7 +26,7 @@ export default function MainLayout() {
       >
         <div
           style={{
-            maxWidth: "1200px",
+            maxWidth: "1800px",
             margin: "0 auto",
             display: "flex",
             alignItems: "center",
@@ -53,7 +53,7 @@ export default function MainLayout() {
         </div>
       </header>
 
-      <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px" }}>
+      <main style={{ maxWidth: "1800px", margin: "0 auto", padding: "24px 18px" }}>
         <Outlet />
       </main>
     </div>
