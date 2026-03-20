@@ -104,7 +104,7 @@ function KpiCard({ label, value, accent }) {
     <div
       style={{
         ...styles.kpiCard,
-        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.8), 0 8px 20px ${accent}`,
+        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.75), 0 6px 16px ${accent}`,
       }}
     >
       <div style={styles.kpiLabel}>{label}</div>
@@ -225,15 +225,13 @@ export default function UniverseDetailPage() {
   return (
     <div style={styles.page}>
       <div style={styles.container}>
-        <section style={styles.heroCard}>
-          <div style={styles.heroTopRow}>
+        <section style={styles.summaryCard}>
+          <div style={styles.summaryHeader}>
             <button style={styles.backButton} onClick={() => navigate(-1)}>
               ← Volver
             </button>
-          </div>
 
-          <div style={styles.heroContent}>
-            <div>
+            <div style={styles.titleBlock}>
               <p style={styles.eyebrow}>Detalle de universo</p>
               <h1 style={styles.title}>{kpis.nombre_universo}</h1>
               <p style={styles.description}>
@@ -241,49 +239,49 @@ export default function UniverseDetailPage() {
               </p>
             </div>
           </div>
-        </section>
 
-        <section style={styles.kpiGrid}>
-          <KpiCard
-            label="Nº de proyectos"
-            value={kpis.num_proyectos ?? 0}
-            accent="rgba(59, 130, 246, 0.10)"
-          />
-          <KpiCard
-            label="Total de tareas"
-            value={kpis.total_tareas ?? 0}
-            accent="rgba(14, 165, 233, 0.10)"
-          />
-          <KpiCard
-            label="Tareas finalizadas"
-            value={kpis.tareas_finalizadas ?? 0}
-            accent="rgba(34, 197, 94, 0.10)"
-          />
-          <KpiCard
-            label="Avance (%)"
-            value={`${kpis.avance_pct ?? 0}%`}
-            accent="rgba(16, 185, 129, 0.10)"
-          />
-          <KpiCard
-            label="Estimación impacto total"
-            value={formatCurrency(kpis.impacto_total_estimado)}
-            accent="rgba(99, 102, 241, 0.10)"
-          />
-          <KpiCard
-            label="Estimación coste / inversión total"
-            value={formatCurrency(kpis.inversion_total_estimada)}
-            accent="rgba(244, 114, 182, 0.10)"
-          />
-          <KpiCard
-            label="Estimación impacto proyectos QW"
-            value={formatCurrency(kpis.impacto_qw_estimado)}
-            accent="rgba(250, 204, 21, 0.12)"
-          />
-          <KpiCard
-            label="Estimación coste / inversión proyectos QW"
-            value={formatCurrency(kpis.inversion_qw_estimada)}
-            accent="rgba(249, 115, 22, 0.10)"
-          />
+          <div style={styles.kpiGrid}>
+            <KpiCard
+              label="Nº de proyectos"
+              value={kpis.num_proyectos ?? 0}
+              accent="rgba(59, 130, 246, 0.08)"
+            />
+            <KpiCard
+              label="Total de tareas"
+              value={kpis.total_tareas ?? 0}
+              accent="rgba(14, 165, 233, 0.08)"
+            />
+            <KpiCard
+              label="Tareas finalizadas"
+              value={kpis.tareas_finalizadas ?? 0}
+              accent="rgba(34, 197, 94, 0.08)"
+            />
+            <KpiCard
+              label="Avance (%)"
+              value={`${kpis.avance_pct ?? 0}%`}
+              accent="rgba(16, 185, 129, 0.08)"
+            />
+            <KpiCard
+              label="Estimación impacto total"
+              value={formatCurrency(kpis.impacto_total_estimado)}
+              accent="rgba(99, 102, 241, 0.08)"
+            />
+            <KpiCard
+              label="Estimación coste / inversión total"
+              value={formatCurrency(kpis.inversion_total_estimada)}
+              accent="rgba(244, 114, 182, 0.08)"
+            />
+            <KpiCard
+              label="Estimación impacto proyectos QW"
+              value={formatCurrency(kpis.impacto_qw_estimado)}
+              accent="rgba(250, 204, 21, 0.10)"
+            />
+            <KpiCard
+              label="Estimación coste / inversión proyectos QW"
+              value={formatCurrency(kpis.inversion_qw_estimada)}
+              accent="rgba(249, 115, 22, 0.08)"
+            />
+          </div>
         </section>
 
         <section style={styles.tableCard}>
@@ -393,82 +391,78 @@ export default function UniverseDetailPage() {
 const styles = {
   page: {
     minHeight: "100vh",
-    padding: "24px",
-    background:
-      "linear-gradient(180deg, #f8fbff 0%, #f4f7fb 38%, #eef4f8 100%)",
+    padding: "18px 24px 24px",
+    background: "linear-gradient(180deg, #f8fbff 0%, #f4f7fb 38%, #eef4f8 100%)",
     boxSizing: "border-box",
   },
   container: {
     maxWidth: 1440,
     margin: "0 auto",
     display: "grid",
-    gap: 18,
+    gap: 14,
   },
-  heroCard: {
-    background: "linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(246,250,255,0.98) 100%)",
+  summaryCard: {
+    background: "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(246,250,255,0.98) 100%)",
     border: "1px solid #dbe4ee",
     borderRadius: 20,
-    padding: 24,
-    boxShadow: "0 14px 36px rgba(15, 23, 42, 0.08)",
+    padding: 16,
+    boxShadow: "0 12px 28px rgba(15, 23, 42, 0.07)",
   },
-  heroTopRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
+  summaryHeader: {
+    display: "grid",
+    gridTemplateColumns: "auto 1fr",
+    alignItems: "start",
+    gap: 12,
+    marginBottom: 12,
   },
-  heroContent: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 16,
-    flexWrap: "wrap",
+  titleBlock: {
+    minWidth: 0,
   },
   eyebrow: {
     margin: 0,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 700,
     letterSpacing: "0.08em",
     textTransform: "uppercase",
     color: "#64748b",
   },
   title: {
-    margin: "8px 0 8px 0",
-    fontSize: 32,
+    margin: "4px 0 6px 0",
+    fontSize: 28,
     lineHeight: 1.05,
     color: "#0f172a",
   },
   description: {
     margin: 0,
-    maxWidth: 900,
-    fontSize: 15,
-    lineHeight: 1.5,
+    maxWidth: 980,
+    fontSize: 14,
+    lineHeight: 1.45,
     color: "#475569",
   },
   kpiGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-    gap: 14,
+    gap: 10,
   },
   kpiCard: {
-    minHeight: 104,
-    borderRadius: 18,
+    minHeight: 78,
+    borderRadius: 16,
     border: "1px solid #dbe4ee",
     background: "rgba(255,255,255,0.88)",
-    padding: "16px 18px",
+    padding: "12px 14px",
     display: "flex",
     flexDirection: "column",
     justifyContent: "space-between",
     backdropFilter: "blur(8px)",
   },
   kpiLabel: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#64748b",
-    lineHeight: 1.35,
+    lineHeight: 1.25,
   },
   kpiValue: {
-    fontSize: 28,
-    lineHeight: 1.1,
+    fontSize: 22,
+    lineHeight: 1.05,
     fontWeight: 700,
     color: "#0f172a",
   },
@@ -601,7 +595,8 @@ const styles = {
     fontWeight: 700,
     fontSize: 14,
     cursor: "pointer",
-    padding: 0,
+    padding: "2px 0 0 0",
+    whiteSpace: "nowrap",
   },
   infoCard: {
     background: "rgba(255,255,255,0.94)",
