@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../supabase";
 
@@ -17,6 +17,56 @@ function formatCurrency(value) {
     currency: "EUR",
     maximumFractionDigits: 0,
   }).format(Number(value || 0));
+}
+
+function parseDate(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function startOfDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function diffDays(start, end) {
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.round((startOfDay(end) - startOfDay(start)) / msPerDay);
+}
+
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function getSituationBadgeStyle(situacion) {
+  switch (situacion) {
+    case "En plazo":
+      return {
+        background: "#dcfce7",
+        color: "#166534",
+        border: "1px solid #bbf7d0",
+      };
+    case "En riesgo":
+      return {
+        background: "#fef3c7",
+        color: "#92400e",
+        border: "1px solid #fde68a",
+      };
+    case "Retrasado":
+      return {
+        background: "#fee2e2",
+        color: "#991b1b",
+        border: "1px solid #fecaca",
+      };
+    default:
+      return {
+        background: "#f8fafc",
+        color: "#334155",
+        border: "1px solid #e2e8f0",
+      };
+  }
 }
 
 function getHorizonBadgeStyle(horizonte) {
@@ -70,33 +120,211 @@ function getPhaseBadgeStyle(fase) {
   }
 }
 
-function getSituationBadgeStyle(situacion) {
-  switch (situacion) {
-    case "En plazo":
-      return {
-        background: "#dcfce7",
-        color: "#166534",
-        border: "1px solid #bbf7d0",
-      };
-    case "En riesgo":
-      return {
-        background: "#fef3c7",
-        color: "#92400e",
-        border: "1px solid #fde68a",
-      };
+function getTrafficLight(project) {
+  switch (project?.situacion) {
     case "Retrasado":
-      return {
-        background: "#fee2e2",
-        color: "#991b1b",
-        border: "1px solid #fecaca",
-      };
+      return { color: "#ef4444", label: "Retrasado" };
+    case "En riesgo":
+      return { color: "#f59e0b", label: "En riesgo" };
     default:
-      return {
-        background: "#f8fafc",
-        color: "#334155",
-        border: "1px solid #e2e8f0",
-      };
+      return { color: "#22c55e", label: "En plazo" };
   }
+}
+
+function buildTimeline(projects) {
+  const fixedStart = new Date(2026, 0, 1);
+  const fixedEnd = new Date(2026, 11, 31);
+
+  const validStarts = projects.map((p) => parseDate(p.fecha_inicio)).filter(Boolean);
+  const validEnds = projects.map((p) => parseDate(p.fecha_fin)).filter(Boolean);
+
+  const minProjectStart = validStarts.length
+    ? new Date(Math.min(...validStarts.map((d) => d.getTime())))
+    : fixedStart;
+
+  const maxProjectEnd = validEnds.length
+    ? new Date(Math.max(...validEnds.map((d) => d.getTime())))
+    : fixedEnd;
+
+  const start = minProjectStart < fixedStart ? minProjectStart : fixedStart;
+  const end = maxProjectEnd > fixedEnd ? maxProjectEnd : fixedEnd;
+
+  const totalDays = Math.max(1, diffDays(start, end) + 1);
+
+  const months = [];
+  let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+
+  while (cursor <= end) {
+    const monthStart = cursor < start ? start : new Date(cursor);
+    const monthEnd = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0);
+    const boundedMonthEnd = monthEnd > end ? end : monthEnd;
+
+    months.push({
+      key: `${cursor.getFullYear()}-${cursor.getMonth()}`,
+      label: cursor.toLocaleDateString("es-ES", {
+        month: "short",
+        year: "numeric",
+      }),
+      leftPct: (diffDays(start, monthStart) / totalDays) * 100,
+      widthPct: ((diffDays(monthStart, boundedMonthEnd) + 1) / totalDays) * 100,
+    });
+
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+  }
+
+  const today = new Date();
+  const weekStart = addDays(today, -((today.getDay() + 6) % 7));
+  const currentLinePct =
+    today < start ? 0 : today > end ? 100 : (diffDays(start, weekStart) / totalDays) * 100;
+
+  return { start, end, totalDays, months, currentLinePct, today };
+}
+
+function GanttChart({ projects }) {
+  const timeline = useMemo(() => buildTimeline(projects), [projects]);
+
+  return (
+    <section style={styles.ganttCard}>
+      <div style={styles.ganttHeader}>
+        <div>
+          <h2 style={styles.tableTitle}>Cronograma global del universo</h2>
+          <p style={styles.tableSubtitle}>
+            Vista sencilla de proyectos. El cronograma cubre como mínimo todo 2026 y marca la semana actual.
+          </p>
+        </div>
+
+        <div style={styles.ganttLegend}>
+          <div style={styles.legendItem}>
+            <span style={{ ...styles.legendSwatch, background: "#dbeafe", border: "1px solid #93c5fd" }} />
+            <span>Barra proyecto</span>
+          </div>
+          <div style={styles.legendItem}>
+            <span style={{ ...styles.legendLine, background: "#0f172a" }} />
+            <span>Semana actual</span>
+          </div>
+          <div style={styles.legendItem}>
+            <span style={{ ...styles.trafficDot, background: "#22c55e" }} />
+            <span>En plazo</span>
+          </div>
+          <div style={styles.legendItem}>
+            <span style={{ ...styles.trafficDot, background: "#f59e0b" }} />
+            <span>En riesgo</span>
+          </div>
+          <div style={styles.legendItem}>
+            <span style={{ ...styles.trafficDot, background: "#ef4444" }} />
+            <span>Retrasado</span>
+          </div>
+        </div>
+      </div>
+
+      {projects.length === 0 ? (
+        <div style={styles.emptyGantt}>No hay proyectos para mostrar en el cronograma.</div>
+      ) : (
+        <div style={styles.ganttScroll}>
+          <div style={styles.ganttBoard}>
+            <div style={styles.ganttTopRow}>
+              <div style={styles.ganttProjectHeader}>Proyecto</div>
+              <div style={styles.ganttTimelineHeader}>
+                {timeline.months.map((month) => (
+                  <div
+                    key={month.key}
+                    style={{
+                      ...styles.monthHeader,
+                      left: `${month.leftPct}%`,
+                      width: `${month.widthPct}%`,
+                    }}
+                  >
+                    {month.label}
+                  </div>
+                ))}
+                <div
+                  style={{
+                    ...styles.currentWeekLine,
+                    left: `${timeline.currentLinePct}%`,
+                  }}
+                />
+                <div
+                  style={{
+                    ...styles.currentWeekTag,
+                    left: `min(${Math.max(timeline.currentLinePct, 1)}%, calc(100% - 84px))`,
+                  }}
+                >
+                  Semana actual
+                </div>
+              </div>
+              <div style={styles.ganttStatusHeader}>Estado</div>
+            </div>
+
+            {projects.map((project) => {
+              const start = parseDate(project.fecha_inicio);
+              const end = parseDate(project.fecha_fin);
+              const traffic = getTrafficLight(project);
+
+              let leftPct = 0;
+              let widthPct = 0;
+
+              if (start && end) {
+                const boundedStart = start < timeline.start ? timeline.start : start;
+                const boundedEnd = end > timeline.end ? timeline.end : end;
+                leftPct = (diffDays(timeline.start, boundedStart) / timeline.totalDays) * 100;
+                widthPct = ((diffDays(boundedStart, boundedEnd) + 1) / timeline.totalDays) * 100;
+              }
+
+              return (
+                <div key={project.id_proyecto} style={styles.ganttRow}>
+                  <div style={styles.ganttProjectCell}>
+                    <div style={styles.ganttProjectTitle}>{project.titulo || "—"}</div>
+                    <div style={styles.ganttProjectMeta}>
+                      {project.horizonte || "—"} · {formatDate(project.fecha_inicio)} — {formatDate(project.fecha_fin)}
+                    </div>
+                  </div>
+
+                  <div style={styles.ganttTimelineCell}>
+                    {timeline.months.map((month) => (
+                      <div
+                        key={`${project.id_proyecto}-${month.key}`}
+                        style={{
+                          ...styles.monthBand,
+                          left: `${month.leftPct}%`,
+                          width: `${month.widthPct}%`,
+                        }}
+                      />
+                    ))}
+
+                    <div
+                      style={{
+                        ...styles.currentWeekLine,
+                        left: `${timeline.currentLinePct}%`,
+                      }}
+                    />
+
+                    {start && end ? (
+                      <div
+                        style={{
+                          ...styles.ganttBar,
+                          left: `${Math.max(0, leftPct)}%`,
+                          width: `${Math.max(widthPct, 1.4)}%`,
+                        }}
+                        title={`${project.titulo} · ${formatDate(project.fecha_inicio)} → ${formatDate(project.fecha_fin)}`}
+                      >
+                        <span style={styles.ganttBarLabel}>{project.horizonte === "Quick-Win" ? "QW" : "MT"}</span>
+                      </div>
+                    ) : (
+                      <div style={styles.ganttNoDates}>Sin fechas</div>
+                    )}
+                  </div>
+
+                  <div style={styles.ganttStatusCell}>
+                    <span style={{ ...styles.trafficDotLarge, background: traffic.color }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </section>
+  );
 }
 
 function KpiCard({ label, value, accent }) {
@@ -284,6 +512,8 @@ export default function UniverseDetailPage() {
           </div>
         </section>
 
+        <GanttChart projects={projects} />
+
         <section style={styles.tableCard}>
           <div style={styles.tableHeader}>
             <div>
@@ -465,6 +695,224 @@ const styles = {
     lineHeight: 1.05,
     fontWeight: 700,
     color: "#0f172a",
+  },
+  ganttCard: {
+    background: "rgba(255,255,255,0.92)",
+    border: "1px solid #dbe4ee",
+    borderRadius: 20,
+    padding: 18,
+    boxShadow: "0 14px 36px rgba(15, 23, 42, 0.08)",
+    backdropFilter: "blur(8px)",
+  },
+  ganttHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 16,
+    marginBottom: 16,
+    flexWrap: "wrap",
+  },
+  ganttLegend: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 10,
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  legendItem: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    fontSize: 12,
+    color: "#64748b",
+    whiteSpace: "nowrap",
+  },
+  legendSwatch: {
+    width: 18,
+    height: 10,
+    borderRadius: 999,
+    display: "inline-block",
+  },
+  legendLine: {
+    width: 18,
+    height: 2,
+    borderRadius: 999,
+    display: "inline-block",
+  },
+  ganttScroll: {
+    overflowX: "auto",
+  },
+  ganttBoard: {
+    minWidth: 1220,
+    border: "1px solid #e2e8f0",
+    borderRadius: 16,
+    overflow: "hidden",
+    background: "#ffffff",
+  },
+  ganttTopRow: {
+    display: "grid",
+    gridTemplateColumns: "280px 1fr 72px",
+    borderBottom: "1px solid #e2e8f0",
+    background: "#f8fafc",
+  },
+  ganttProjectHeader: {
+    padding: "12px 14px",
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
+    color: "#475569",
+    borderRight: "1px solid #e2e8f0",
+  },
+  ganttTimelineHeader: {
+    position: "relative",
+    height: 54,
+    borderRight: "1px solid #e2e8f0",
+  },
+  ganttStatusHeader: {
+    padding: "12px 14px",
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
+    color: "#475569",
+    textAlign: "center",
+  },
+  monthHeader: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRight: "1px solid #e2e8f0",
+    fontSize: 11,
+    fontWeight: 700,
+    color: "#64748b",
+    textTransform: "capitalize",
+    background: "rgba(248,250,252,0.65)",
+  },
+  monthBand: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    borderRight: "1px solid #f1f5f9",
+    background: "linear-gradient(180deg, rgba(248,250,252,0.55) 0%, rgba(255,255,255,0.35) 100%)",
+  },
+  currentWeekLine: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 2,
+    marginLeft: -1,
+    background: "#0f172a",
+    opacity: 0.8,
+    zIndex: 4,
+  },
+  currentWeekTag: {
+    position: "absolute",
+    top: 6,
+    transform: "translateX(-50%)",
+    padding: "4px 8px",
+    borderRadius: 999,
+    background: "#0f172a",
+    color: "#ffffff",
+    fontSize: 10,
+    fontWeight: 700,
+    whiteSpace: "nowrap",
+    zIndex: 5,
+  },
+  ganttRow: {
+    display: "grid",
+    gridTemplateColumns: "280px 1fr 72px",
+    minHeight: 52,
+    borderBottom: "1px solid #edf2f7",
+  },
+  ganttProjectCell: {
+    padding: "10px 14px",
+    borderRight: "1px solid #edf2f7",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    gap: 4,
+  },
+  ganttProjectTitle: {
+    fontSize: 13,
+    fontWeight: 700,
+    color: "#0f172a",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  ganttProjectMeta: {
+    fontSize: 11,
+    color: "#64748b",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  ganttTimelineCell: {
+    position: "relative",
+    minHeight: 52,
+    borderRight: "1px solid #edf2f7",
+    overflow: "hidden",
+  },
+  ganttBar: {
+    position: "absolute",
+    top: "50%",
+    transform: "translateY(-50%)",
+    height: 16,
+    borderRadius: 999,
+    background: "linear-gradient(135deg, #93c5fd 0%, #3b82f6 100%)",
+    boxShadow: "0 5px 12px rgba(59,130,246,0.24)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    paddingRight: 6,
+    zIndex: 3,
+  },
+  ganttBarLabel: {
+    fontSize: 10,
+    fontWeight: 700,
+    color: "#ffffff",
+    letterSpacing: "0.02em",
+  },
+  ganttNoDates: {
+    position: "absolute",
+    inset: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 12,
+    color: "#94a3b8",
+    zIndex: 2,
+  },
+  ganttStatusCell: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  trafficDot: {
+    width: 10,
+    height: 10,
+    borderRadius: "50%",
+    display: "inline-block",
+    boxShadow: "0 0 0 3px rgba(15,23,42,0.04)",
+  },
+  trafficDotLarge: {
+    width: 14,
+    height: 14,
+    borderRadius: "50%",
+    display: "inline-block",
+    boxShadow: "0 0 0 4px rgba(15,23,42,0.05)",
+  },
+  emptyGantt: {
+    padding: 24,
+    textAlign: "center",
+    color: "#64748b",
+    border: "1px dashed #cbd5e1",
+    borderRadius: 14,
+    background: "#f8fafc",
   },
   tableCard: {
     background: "rgba(255,255,255,0.92)",
