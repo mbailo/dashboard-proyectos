@@ -101,7 +101,10 @@ function ProjectMiniCard({ project, onOpenProject }) {
 
   return (
     <div
-      onClick={() => onOpenProject?.(project)}
+      onClick={(e) => {
+        e.stopPropagation();
+        onOpenProject?.(project);
+      }}
       style={{
         background: "#ffffff",
         border: "1px solid #dbe4ee",
@@ -201,9 +204,10 @@ function ProjectMiniCard({ project, onOpenProject }) {
   );
 }
 
-function UniverseColumn({ universe, projects, onOpenProject }) {
+function UniverseColumn({ universe, projects, onOpenProject, onOpenUniverse }) {
   return (
-    <div
+       <div
+      onClick={() => onOpenUniverse?.(universe)}
       style={{
         background: "rgba(255,255,255,0.8)",
         border: "1px solid #dbe4ee",
@@ -212,8 +216,9 @@ function UniverseColumn({ universe, projects, onOpenProject }) {
         boxShadow: "0 10px 24px rgba(15,23,42,0.05)",
         backdropFilter: "blur(8px)",
         minWidth: 0,
+        cursor: "pointer",
       }}
-    >
+      >
       <div
         style={{
           marginBottom: 8,
@@ -391,7 +396,11 @@ export default function DashboardPage() {
   function handleOpenProject(project) {
     navigate(`/proyectos/${project.id_proyecto}`);
   }
-
+        
+  function handleOpenUniverse(universe) {
+    navigate(`/universes/${universe.id_universo}`);
+  }
+        
 async function handleCreateUniverse(e) {
   e.preventDefault();
   setUniverseError("");
@@ -556,10 +565,10 @@ async function handleCreateUniverse(e) {
           {universes.map((universe) => (
             <UniverseColumn
               key={universe.id_universo}
-              onClick={() => navigate(`/universes/${universo.id_universo}`)}   // modificado
               universe={universe}
               projects={projectsByUniverse[universe.id_universo] || []}
               onOpenProject={handleOpenProject}
+              onOpenUniverse={handleOpenUniverse}
             />
           ))}
         </div>
