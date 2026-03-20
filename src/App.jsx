@@ -7,6 +7,7 @@ import DashboardPage from "./pages/DashboardPage";
 import NewProjectPage from "./pages/NewProjectPage";
 import ProjectDetailPage from "./pages/ProjectDetailPage";
 import LoginPage from "./pages/LoginPage";
+import UniverseDetailPage from "./pages/UniverseDetailPage";
 
 function AppRoutes() {
   const location = useLocation();
@@ -61,6 +62,7 @@ function AppRoutes() {
       <Route element={<MainLayout />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/proyectos/nuevo" element={<NewProjectPage />} />
+        <Route path="/universes/:id" element={<UniverseDetailPage />} />
         <Route path="/proyectos/:id" element={<ProjectDetailPage />} />
       </Route>
     </Routes>
