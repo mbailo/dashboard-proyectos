@@ -639,13 +639,14 @@ export default function UniverseDetailPage() {
 const styles = {
   page: {
     minHeight: "100vh",
-    padding: "18px 24px 24px",
+    padding: "14px 18px",
     background: "linear-gradient(180deg, #f8fbff 0%, #f4f7fb 38%, #eef4f8 100%)",
     boxSizing: "border-box",
-    overflowX: "hidden",
+    //overflowX: "hidden",
   },
   container: {
-    maxWidth: 1440,
+    maxWidth: 1800,
+    width: "100%",
     margin: "0 auto",
     display: "grid",
     gap: 14,
