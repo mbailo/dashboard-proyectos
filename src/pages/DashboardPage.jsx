@@ -556,6 +556,7 @@ async function handleCreateUniverse(e) {
           {universes.map((universe) => (
             <UniverseColumn
               key={universe.id_universo}
+              onClick={() => navigate(`/universes/${universo.id_universo}`)}   // modificado
               universe={universe}
               projects={projectsByUniverse[universe.id_universo] || []}
               onOpenProject={handleOpenProject}
