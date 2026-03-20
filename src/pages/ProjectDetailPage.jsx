@@ -259,6 +259,27 @@ export default function ProjectDetailPage() {
   setShowEditModal(false);
   setEditingTask(null);
 };
+
+async function handleDeleteTask(idTarea) {
+  const confirmed = window.confirm("¿Seguro que quieres eliminar esta tarea?");
+  if (!confirmed) return;
+
+  try {
+    const { error } = await supabase
+      .from("tareas")
+      .delete()
+      .eq("id_tarea", idTarea);
+
+    if (error) {
+      throw error;
+    }
+
+    await loadAll();
+  } catch (err) {
+    console.error("Error al eliminar tarea:", err);
+    alert(err.message || "Error al eliminar la tarea");
+  }
+}
   
 /* EMPIEZA useEffect() */
   
@@ -866,24 +887,42 @@ export default function ProjectDetailPage() {
                     <td style={tdStyle}>{formatDate(tarea.fecha_inicio)}</td>
                     <td style={tdStyle}>{formatDate(tarea.fecha_fin)}</td>
                     <td style={tdStyle}>
-                    <button
-                        onClick={() => {
-                          setEditingTask(tarea);
-                          setShowEditModal(true);
-                        }}
-                        style={{
-                          background: "#2563eb",
-                          color: "#ffffff",
-                          border: "none",
-                          borderRadius: "8px",
-                          padding: "8px 12px",
-                          cursor: "pointer",
-                          fontSize: "13px",
-                          fontWeight: 600,
-                        }}
-                    >
-                        Editar
-                      </button>
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                        <button
+                          onClick={() => {
+                            setEditingTask(tarea);
+                            setShowEditModal(true);
+                          }}
+                          style={{
+                            background: "#2563eb",
+                            color: "#ffffff",
+                            border: "none",
+                            borderRadius: "8px",
+                            padding: "8px 12px",
+                            cursor: "pointer",
+                            fontSize: "13px",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Editar
+                        </button>
+                    
+                        <button
+                          onClick={() => handleDeleteTask(tarea.id_tarea)}
+                          style={{
+                            background: "#dc2626",
+                            color: "#ffffff",
+                            border: "none",
+                            borderRadius: "8px",
+                            padding: "8px 12px",
+                            cursor: "pointer",
+                            fontSize: "13px",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Eliminar
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
