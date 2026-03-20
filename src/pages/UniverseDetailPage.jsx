@@ -40,33 +40,37 @@ function addDays(date, days) {
   return next;
 }
 
+function normalizeSituation(situacion) {
+  const value = (situacion || "").trim();
+
+  if (value === "En tiempo" || value === "En plazo") return "En tiempo";
+  if (value === "Riesgo de retraso" || value === "En riesgo") return "Riesgo de retraso";
+  if (value === "Retrasado") return "Retrasado";
+  return value || "Sin informar";
+}
+
+function getSituationColor(situacion) {
+  const normalized = normalizeSituation(situacion);
+  if (normalized === "En tiempo") return "#16a34a";
+  if (normalized === "Riesgo de retraso") return "#f59e0b";
+  if (normalized === "Retrasado") return "#dc2626";
+  return "#94a3b8";
+}
+
+function getSituationBg(situacion) {
+  const normalized = normalizeSituation(situacion);
+  if (normalized === "En tiempo") return "#dcfce7";
+  if (normalized === "Riesgo de retraso") return "#fef3c7";
+  if (normalized === "Retrasado") return "#fee2e2";
+  return "#e2e8f0";
+}
+
 function getSituationBadgeStyle(situacion) {
-  switch (situacion) {
-    case "En plazo":
-      return {
-        background: "#dcfce7",
-        color: "#166534",
-        border: "1px solid #bbf7d0",
-      };
-    case "En riesgo":
-      return {
-        background: "#fef3c7",
-        color: "#92400e",
-        border: "1px solid #fde68a",
-      };
-    case "Retrasado":
-      return {
-        background: "#fee2e2",
-        color: "#991b1b",
-        border: "1px solid #fecaca",
-      };
-    default:
-      return {
-        background: "#f8fafc",
-        color: "#334155",
-        border: "1px solid #e2e8f0",
-      };
-  }
+  return {
+    background: getSituationBg(situacion),
+    color: getSituationColor(situacion),
+    border: `1px solid ${getSituationBg(situacion) === "#e2e8f0" ? "#cbd5e1" : getSituationBg(situacion)}`,
+  };
 }
 
 function getHorizonBadgeStyle(horizonte) {
@@ -121,14 +125,20 @@ function getPhaseBadgeStyle(fase) {
 }
 
 function getTrafficLight(project) {
-  switch (project?.situacion) {
-    case "Retrasado":
-      return { color: "#ef4444", label: "Retrasado" };
-    case "En riesgo":
-      return { color: "#f59e0b", label: "En riesgo" };
-    default:
-      return { color: "#22c55e", label: "En plazo" };
-  }
+  const normalized = normalizeSituation(project?.situacion);
+  return {
+    color: getSituationColor(normalized),
+    label: normalized,
+  };
+}
+
+function getHarveyBall(avance) {
+  const pct = Number(avance || 0);
+  if (pct <= 0) return "○";
+  if (pct < 25) return "◔";
+  if (pct < 50) return "◑";
+  if (pct < 75) return "◕";
+  return "●";
 }
 
 function buildTimeline(projects) {
@@ -203,15 +213,15 @@ function GanttChart({ projects }) {
             <span>Semana actual</span>
           </div>
           <div style={styles.legendItem}>
-            <span style={{ ...styles.trafficDot, background: "#22c55e" }} />
-            <span>En plazo</span>
+            <span style={{ ...styles.trafficDot, background: getSituationColor("En tiempo") }} />
+            <span>En tiempo</span>
           </div>
           <div style={styles.legendItem}>
-            <span style={{ ...styles.trafficDot, background: "#f59e0b" }} />
-            <span>En riesgo</span>
+            <span style={{ ...styles.trafficDot, background: getSituationColor("Riesgo de retraso") }} />
+            <span>Riesgo de retraso</span>
           </div>
           <div style={styles.legendItem}>
-            <span style={{ ...styles.trafficDot, background: "#ef4444" }} />
+            <span style={{ ...styles.trafficDot, background: getSituationColor("Retrasado") }} />
             <span>Retrasado</span>
           </div>
         </div>
@@ -314,7 +324,7 @@ function GanttChart({ projects }) {
                     )}
                   </div>
 
-                  <div style={styles.ganttStatusCell}>
+                  <div style={styles.ganttStatusCell} title={traffic.label}>
                     <span style={{ ...styles.trafficDotLarge, background: traffic.color }} />
                   </div>
                 </div>
@@ -337,6 +347,17 @@ function KpiCard({ label, value, accent }) {
     >
       <div style={styles.kpiLabel}>{label}</div>
       <div style={styles.kpiValue}>{value}</div>
+    </div>
+  );
+}
+
+function ProgressCell({ avance }) {
+  const pct = Number(avance || 0);
+
+  return (
+    <div style={styles.progressWrap}>
+      <span style={styles.progressBall}>{getHarveyBall(pct)}</span>
+      <span style={styles.progressText}>{pct}%</span>
     </div>
   );
 }
@@ -379,6 +400,7 @@ export default function UniverseDetailPage() {
             fecha_fin,
             fase,
             situacion,
+            avance_pct,
             impacto_estimado,
             inversion_estimada
           `)
@@ -535,6 +557,7 @@ export default function UniverseDetailPage() {
                   <th style={styles.th}>Fecha fin</th>
                   <th style={styles.th}>Fase</th>
                   <th style={styles.th}>Situación</th>
+                  <th style={styles.th}>Avance</th>
                   <th style={{ ...styles.th, textAlign: "right" }}>Impacto estimado</th>
                   <th style={{ ...styles.th, textAlign: "right" }}>Inversión estimada</th>
                   <th style={{ ...styles.th, textAlign: "center" }}>Detalle</th>
@@ -544,7 +567,7 @@ export default function UniverseDetailPage() {
               <tbody>
                 {projects.length === 0 ? (
                   <tr>
-                    <td colSpan={10} style={styles.emptyCell}>
+                    <td colSpan={11} style={styles.emptyCell}>
                       No hay proyectos informados para este universo.
                     </td>
                   </tr>
@@ -586,8 +609,11 @@ export default function UniverseDetailPage() {
                             ...getSituationBadgeStyle(project.situacion),
                           }}
                         >
-                          {project.situacion || "—"}
+                          {normalizeSituation(project.situacion)}
                         </span>
+                      </td>
+                      <td style={styles.td}>
+                        <ProgressCell avance={project.avance_pct} />
                       </td>
                       <td style={styles.tdNumber}>
                         {formatCurrency(project.impacto_estimado)}
@@ -944,7 +970,7 @@ const styles = {
   },
   table: {
     width: "100%",
-    minWidth: 1180,
+    minWidth: 1300,
     borderCollapse: "separate",
     borderSpacing: 0,
   },
@@ -1014,6 +1040,21 @@ const styles = {
     fontSize: 12,
     fontWeight: 700,
     whiteSpace: "nowrap",
+  },
+  progressWrap: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+  },
+  progressBall: {
+    fontSize: 15,
+    color: "#0f172a",
+    lineHeight: 1,
+  },
+  progressText: {
+    fontSize: 11,
+    color: "#64748b",
+    fontWeight: 600,
   },
   primaryButton: {
     border: "none",
