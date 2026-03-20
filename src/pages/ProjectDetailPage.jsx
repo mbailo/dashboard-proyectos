@@ -98,6 +98,8 @@ const secondaryButtonStyle = {
   cursor: "pointer",
 };
 
+/* EMPIEZA useState() */
+
 export default function ProjectDetailPage() {
   const { id } = useParams();
 
@@ -231,6 +233,35 @@ export default function ProjectDetailPage() {
     }
   }
 
+  const handleUpdateTask = async () => {
+  if (!editingTask) return;
+
+  const { error } = await supabase
+    .from("tareas")
+    .update({
+      titulo: editingTask.titulo,
+      descripcion: editingTask.descripcion,
+      owner: editingTask.owner,
+      estado_tarea: editingTask.estado_tarea,
+      situacion: editingTask.situacion,
+      fecha_inicio: editingTask.fecha_inicio || null,
+      fecha_fin: editingTask.fecha_fin || null,
+    })
+    .eq("id_tarea", editingTask.id_tarea);
+
+  if (error) {
+    console.error("Error al actualizar tarea:", error);
+    alert("Error al actualizar la tarea");
+    return;
+  }
+
+  await loadAll();
+  setShowEditModal(false);
+  setEditingTask(null);
+};
+  
+/* EMPIEZA useEffect() */
+  
   useEffect(() => {
     loadAll();
   }, [id]);
@@ -1347,6 +1378,7 @@ export default function ProjectDetailPage() {
             </button>
     
             <button
+              onClick={handleUpdateTask}
               style={{
                 background: "#2563eb",
                 color: "#ffffff",
