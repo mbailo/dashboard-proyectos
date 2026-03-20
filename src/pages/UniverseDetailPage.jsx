@@ -639,7 +639,7 @@ export default function UniverseDetailPage() {
 const styles = {
   page: {
     minHeight: "100vh",
-    padding: "14px 18px",
+    padding: "14px 8px 24px",
     background: "linear-gradient(180deg, #f8fbff 0%, #f4f7fb 38%, #eef4f8 100%)",
     boxSizing: "border-box",
     //overflowX: "hidden",
