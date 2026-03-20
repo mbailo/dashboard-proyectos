@@ -644,12 +644,12 @@ const styles = {
     boxSizing: "border-box",
   },
   container: {
-    maxWidth: "1400px",
-    margin: "0 auto",   // 👈 CLAVE (centra todo)
+    maxWidth: 1400,
     width: "100%",
+    margin: "0 auto",
     display: "grid",
-    gap: "16px",
-  }
+    gap: 16,
+  },
   summaryCard: {
     width: "100%",
     margin: "0 auto",
