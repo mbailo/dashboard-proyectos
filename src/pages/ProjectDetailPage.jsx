@@ -134,18 +134,21 @@ function getTaskStatusBadgeStyle(estado) {
 
 const thStyle = {
   textAlign: "left",
-  padding: "12px",
+  padding: "12px 14px",
+  fontSize: "12px",
+  fontWeight: 700,
+  color: "#6b7280",
+  textTransform: "uppercase",
+  letterSpacing: "0.04em",
   borderBottom: "1px solid #e5e7eb",
-  fontSize: "13px",
-  color: "#374151",
 };
 
 const tdStyle = {
-  padding: "12px",
-  borderBottom: "1px solid #e5e7eb",
+  padding: "14px",
+  borderBottom: "1px solid #f1f5f9",
   fontSize: "14px",
   color: "#111827",
-};
+};;
 
 const inputStyle = {
   width: "100%",
@@ -977,9 +980,9 @@ async function handleDeleteTask(idTarea) {
               <tbody>
                 {tareas.map((tarea) => (
                   <tr key={tarea.id_tarea}>
-                    <td style={tdStyle}>{tarea.titulo || "-"}</td>
+                    <td style={tdStyle}><span style={{ fontWeight: 600 }}>{tarea.titulo || "-"}</span></td>
                     <td style={tdStyle}>{tarea.descripcion || "-"}</td>
-                    <td style={tdStyle}>{tarea.owner || "-"}</td>
+                    <td style={tdStyle}><span style={{ fontWeight: 600 }}>{tarea.owner || "-"}</span></td>
                     <td style={tdStyle}>{formatDate(tarea.fecha_inicio)}</td>
                     <td style={tdStyle}>{formatDate(tarea.fecha_fin)}</td>
                     <td style={tdStyle}>
