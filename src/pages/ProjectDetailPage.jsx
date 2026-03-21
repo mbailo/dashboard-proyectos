@@ -916,8 +916,6 @@ async function handleDeleteTask(idTarea) {
             {showTaskForm ? "Cancelar" : "+ Nueva tarea"}
           </button>
         </div>
-
-          /* FORMULARIO DE ALTA DE TAREA  */
           
         {showTaskForm && (
           <form
@@ -1332,17 +1330,17 @@ async function handleDeleteTask(idTarea) {
             <table style={tableStyle}>
               <thead>
                 <tr>
-                  <th style={{ ...thStyle, width: "120px" }}>Id Coste</th>
+                  <th style={{ ...thStyle, width: "100px" }}>Id Coste</th>
                   <th style={{ ...thStyle, width: "180px" }}>Título</th>
-                  <th style={{ ...thStyle, width: "400px" }}>Descripción</th>
-                  <th style={{ ...thStyle, width: "140px" }}>Tipo</th>
-                  <th style={{ ...thStyle, width: "140px" }}>Importe</th>
+                  <th style={{ ...thStyle, width: "500px" }}>Descripción</th>
+                  <th style={{ ...thStyle, width: "100px" }}>Tipo</th>
+                  <th style={{ ...thStyle, width: "100px" }}>Importe</th>
                 </tr>
               </thead>
               <tbody>
                 {costes.map((coste) => (
                   <tr key={coste.id_coste}>
-                    <td style={{ ...tdStyle, width: "120px", whiteSpace: "nowrap" }}>{coste.id_coste}</td>
+                    <td style={{ ...tdStyle, width: "100px", whiteSpace: "nowrap" }}>{coste.id_coste}</td>
                     <td
                       style={{
                         ...tdStyle,
@@ -1361,8 +1359,8 @@ async function handleDeleteTask(idTarea) {
                     <td
                       style={{
                         ...tdStyle,
-                        width: "400px",
-                        maxWidth: "400px",
+                        width: "500px",
+                        maxWidth: "500px",
                         whiteSpace: "normal",
                         wordBreak: "break-word",
                         overflowWrap: "anywhere",
@@ -1373,7 +1371,7 @@ async function handleDeleteTask(idTarea) {
                     <td
                       style={{
                         ...tdStyle,
-                        width: "140px",
+                        width: "100px",
                         whiteSpace: "nowrap",
                       }}
                     >
@@ -1382,7 +1380,7 @@ async function handleDeleteTask(idTarea) {
                     <td
                       style={{
                         ...tdStyle,
-                        width: "140px",
+                        width: "100px",
                         whiteSpace: "nowrap",
                         textAlign: "right",
                         fontWeight: 600,
