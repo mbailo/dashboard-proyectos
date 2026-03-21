@@ -270,6 +270,7 @@ export default function ProjectDetailPage() {
   const [taskErrorMsg, setTaskErrorMsg] = useState("");
   const [taskForm, setTaskForm] = useState({
     titulo: "",
+    descripcion: "",
     owner: "",
     estado_tarea: "No Iniciada",
     situacion: "En tiempo",
@@ -465,6 +466,7 @@ async function handleDeleteTask(idTarea) {
     const { error } = await supabase.rpc("crear_tarea", {
       p_id_proyecto: id,
       p_titulo: taskForm.titulo,
+      p_descripcion: taskForm.descripcion || null,
       p_owner: taskForm.owner || null,
       p_estado_tarea: taskForm.estado_tarea,
       p_situacion: taskForm.situacion,
@@ -480,6 +482,7 @@ async function handleDeleteTask(idTarea) {
 
     setTaskForm({
       titulo: "",
+      descripcion: "",
       owner: "",
       estado_tarea: "No Iniciada",
       situacion: "En tiempo",
@@ -883,6 +886,21 @@ async function handleDeleteTask(idTarea) {
                 />
               </div>
 
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={labelStyle}>Descripción</label>
+                <textarea
+                  name="descripcion"
+                  value={taskForm.descripcion}
+                  onChange={handleTaskFormChange}
+                  style={{
+                    ...inputStyle,
+                    minHeight: "90px",
+                    resize: "vertical",
+                    fontFamily: "inherit",
+                  }}
+                />
+              </div>
+              
               <div>
                 <label style={labelStyle}>Owner</label>
                 <input
