@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Settings, X } from "lucide-react";
+import { Settings, Trash } from "lucide-react";
 import { supabase } from "../supabase";
 
 function formatCurrency(value) {
@@ -950,7 +950,7 @@ async function handleDeleteTask(idTarea) {
                             cursor: "pointer",
                           }}
                         >
-                          <X size={16} />
+                          <Trash size={16} />
                         </button>
                       </div>
                     </td>
