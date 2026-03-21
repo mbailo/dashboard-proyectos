@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { Settings, X } from "lucide-react";
 import { supabase } from "../supabase";
 
 function formatCurrency(value) {
@@ -906,40 +907,50 @@ async function handleDeleteTask(idTarea) {
                     <td style={tdStyle}>{tarea.situacion || "-"}</td>
                     <td style={tdStyle}>{formatTaskDelay(tarea.fecha_fin, tarea.situacion)}</td>
                     <td style={tdStyle}>
-                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                         <button
+                          type="button"
                           onClick={() => {
                             setEditingTask(tarea);
                             setShowEditModal(true);
                           }}
+                          title="Editar tarea"
+                          aria-label="Editar tarea"
                           style={{
-                            background: "#2563eb",
-                            color: "#ffffff",
-                            border: "none",
-                            borderRadius: "8px",
-                            padding: "8px 12px",
+                            background: "#eff6ff",
+                            color: "#2563eb",
+                            border: "1px solid #bfdbfe",
+                            borderRadius: "10px",
+                            width: "36px",
+                            height: "36px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
                             cursor: "pointer",
-                            fontSize: "13px",
-                            fontWeight: 600,
                           }}
                         >
-                          Editar
+                          <Settings size={16} />
                         </button>
                     
                         <button
+                          type="button"
                           onClick={() => handleDeleteTask(tarea.id_tarea)}
+                          title="Eliminar tarea"
+                          aria-label="Eliminar tarea"
                           style={{
-                            background: "#dc2626",
-                            color: "#ffffff",
-                            border: "none",
-                            borderRadius: "8px",
-                            padding: "8px 12px",
+                            background: "#fef2f2",
+                            color: "#dc2626",
+                            border: "1px solid #fecaca",
+                            borderRadius: "10px",
+                            width: "36px",
+                            height: "36px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
                             cursor: "pointer",
-                            fontSize: "13px",
-                            fontWeight: 600,
                           }}
                         >
-                          Eliminar
+                          <X size={16} />
                         </button>
                       </div>
                     </td>
