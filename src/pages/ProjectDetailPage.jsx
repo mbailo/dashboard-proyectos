@@ -864,28 +864,26 @@ async function handleDeleteTask(idTarea) {
             >
               <thead>
                 <tr style={{ background: "#f9fafb" }}>
-                  <th style={thStyle}>Id Tarea</th>
                   <th style={thStyle}>Título</th>
                   <th style={thStyle}>Descripción</th>
                   <th style={thStyle}>Owner</th>
-                  <th style={thStyle}>Estado</th>
-                  <th style={thStyle}>Situación</th>
                   <th style={thStyle}>Inicio</th>
                   <th style={thStyle}>Fin</th>
+                  <th style={thStyle}>Estado</th>
+                  <th style={thStyle}>Situación</th>
                   <th style={thStyle}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {tareas.map((tarea) => (
                   <tr key={tarea.id_tarea}>
-                    <td style={tdStyle}>{tarea.id_tarea}</td>
                     <td style={tdStyle}>{tarea.titulo || "-"}</td>
                     <td style={tdStyle}>{tarea.descripcion || "-"}</td>
                     <td style={tdStyle}>{tarea.owner || "-"}</td>
-                    <td style={tdStyle}>{tarea.estado_tarea || "-"}</td>
-                    <td style={tdStyle}>{tarea.situacion || "-"}</td>
                     <td style={tdStyle}>{formatDate(tarea.fecha_inicio)}</td>
                     <td style={tdStyle}>{formatDate(tarea.fecha_fin)}</td>
+                    <td style={tdStyle}>{tarea.estado_tarea || "-"}</td>
+                    <td style={tdStyle}>{tarea.situacion || "-"}</td>
                     <td style={tdStyle}>
                       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                         <button
