@@ -1318,8 +1318,6 @@ async function handleDeleteTask(idTarea) {
             </div>
           </form>
         )}
-
-        /* TABLA DE COSTES */
         
         {costes.length === 0 ? (
           <p style={{ marginBottom: 0, color: "#6b7280" }}>
