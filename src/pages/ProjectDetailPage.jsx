@@ -965,7 +965,7 @@ async function handleDeleteTask(idTarea) {
               }}
             >
               <thead>
-                <tr style={{ background: "#f9fafb" }}>
+                <tr style={{ background: "#f8fafc" }}>
                   <th style={thStyle}>Título</th>
                   <th style={thStyle}>Descripción</th>
                   <th style={thStyle}>Owner</th>
