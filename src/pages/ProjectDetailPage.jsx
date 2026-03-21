@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import { Settings, Trash } from "lucide-react";
 import { supabase } from "../supabase";
 
+/* FUNCIONES AUXILIARES */
+
 function formatCurrency(value) {
   if (value === null || value === undefined) return "-";
   return new Intl.NumberFormat("es-ES", {
@@ -64,6 +66,72 @@ function InfoCard({ label, value }) {
   );
 }
 
+function getTaskPhaseBadgeStyle(fase) {
+  switch (fase) {
+    case "No Iniciada":
+      return {
+        background: "#f3f4f6",
+        color: "#4b5563",
+        border: "1px solid #e5e7eb",
+      };
+    case "Planificada":
+      return {
+        background: "#eff6ff",
+        color: "#1d4ed8",
+        border: "1px solid #bfdbfe",
+      };
+    case "En curso":
+      return {
+        background: "#ecfeff",
+        color: "#0f766e",
+        border: "1px solid #a5f3fc",
+      };
+    case "Finalizada":
+      return {
+        background: "#ecfdf5",
+        color: "#047857",
+        border: "1px solid #a7f3d0",
+      };
+    default:
+      return {
+        background: "#f9fafb",
+        color: "#374151",
+        border: "1px solid #e5e7eb",
+      };
+  }
+}
+
+function getTaskStatusBadgeStyle(estado) {
+  switch (estado) {
+    case "En tiempo":
+      return {
+        background: "#ecfdf5",
+        color: "#047857",
+        border: "1px solid #a7f3d0",
+      };
+    case "Riesgo de retraso":
+      return {
+        background: "#fffbeb",
+        color: "#b45309",
+        border: "1px solid #fde68a",
+      };
+    case "Retrasado":
+      return {
+        background: "#fef2f2",
+        color: "#b91c1c",
+        border: "1px solid #fecaca",
+      };
+    default:
+      return {
+        background: "#f9fafb",
+        color: "#374151",
+        border: "1px solid #e5e7eb",
+      };
+  }
+}
+
+/* ESTILOS BASE thStyle, Badges, etc. */
+
 const thStyle = {
   textAlign: "left",
   padding: "12px",
@@ -116,6 +184,17 @@ const secondaryButtonStyle = {
   fontSize: "14px",
   fontWeight: 600,
   cursor: "pointer",
+};
+
+const badgeStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: "999px",
+  padding: "6px 10px",
+  fontSize: "12px",
+  fontWeight: 700,
+  whiteSpace: "nowrap",
 };
 
 /* EMPIEZA useState() */
@@ -903,8 +982,26 @@ async function handleDeleteTask(idTarea) {
                     <td style={tdStyle}>{tarea.owner || "-"}</td>
                     <td style={tdStyle}>{formatDate(tarea.fecha_inicio)}</td>
                     <td style={tdStyle}>{formatDate(tarea.fecha_fin)}</td>
-                    <td style={tdStyle}>{tarea.estado_tarea || "-"}</td>
-                    <td style={tdStyle}>{tarea.situacion || "-"}</td>
+                    <td style={tdStyle}>
+                      <span
+                        style={{
+                          ...badgeStyle,
+                          ...getTaskPhaseBadgeStyle(tarea.estado_tarea),
+                        }}
+                      >
+                        {tarea.estado_tarea || "-"}
+                      </span>
+                    </td>
+                    <td style={tdStyle}>
+                      <span
+                        style={{
+                          ...badgeStyle,
+                          ...getTaskStatusBadgeStyle(tarea.situacion),
+                        }}
+                      >
+                        {tarea.situacion || "-"}
+                      </span>
+                    </td>
                     <td style={tdStyle}>{formatTaskDelay(tarea.fecha_fin, tarea.situacion)}</td>
                     <td style={tdStyle}>
                       <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
