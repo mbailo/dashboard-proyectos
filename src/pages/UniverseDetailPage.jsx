@@ -524,7 +524,6 @@ export default function UniverseDetailPage() {
               accent="rgba(249, 115, 22, 0.08)"
             />
           </div>
-        </div>
         </section>
 
         <GanttChart projects={projects} />
