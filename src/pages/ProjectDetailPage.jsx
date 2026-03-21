@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Settings, Trash } from "lucide-react";
 import { supabase } from "../supabase";
-
-/* FUNCIONES AUXILIARES */
 
 function formatCurrency(value) {
   if (value === null || value === undefined) return "-";
@@ -17,25 +14,6 @@ function formatCurrency(value) {
 function formatDate(value) {
   if (!value) return "-";
   return new Intl.DateTimeFormat("es-ES").format(new Date(value));
-}
-
-function formatTaskDelay(fechaFin, situacion) {
-  if (!fechaFin || situacion !== "Retrasado") return "-";
-
-  const today = new Date();
-  const end = new Date(fechaFin);
-
-  today.setHours(0, 0, 0, 0);
-  end.setHours(0, 0, 0, 0);
-
-  const diffMs = today - end;
-
-  if (diffMs <= 0) return "-";
-
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const diffWeeks = Math.ceil(diffDays / 7);
-
-  return `-${diffWeeks} wks`;
 }
 
 function InfoCard({ label, value }) {
@@ -66,89 +44,20 @@ function InfoCard({ label, value }) {
   );
 }
 
-function getTaskPhaseBadgeStyle(fase) {
-  switch (fase) {
-    case "No Iniciada":
-      return {
-        background: "#f3f4f6",
-        color: "#4b5563",
-        border: "1px solid #e5e7eb",
-      };
-    case "Planificada":
-      return {
-        background: "#eff6ff",
-        color: "#1d4ed8",
-        border: "1px solid #bfdbfe",
-      };
-    case "En curso":
-      return {
-        background: "#ecfeff",
-        color: "#0f766e",
-        border: "1px solid #a5f3fc",
-      };
-    case "Finalizada":
-      return {
-        background: "#ecfdf5",
-        color: "#047857",
-        border: "1px solid #a7f3d0",
-      };
-    default:
-      return {
-        background: "#f9fafb",
-        color: "#374151",
-        border: "1px solid #e5e7eb",
-      };
-  }
-}
-
-function getTaskStatusBadgeStyle(estado) {
-  switch (estado) {
-    case "En tiempo":
-      return {
-        background: "#ecfdf5",
-        color: "#047857",
-        border: "1px solid #a7f3d0",
-      };
-    case "Riesgo de retraso":
-      return {
-        background: "#fffbeb",
-        color: "#b45309",
-        border: "1px solid #fde68a",
-      };
-    case "Retrasado":
-      return {
-        background: "#fef2f2",
-        color: "#b91c1c",
-        border: "1px solid #fecaca",
-      };
-    default:
-      return {
-        background: "#f9fafb",
-        color: "#374151",
-        border: "1px solid #e5e7eb",
-      };
-  }
-}
-
-/* ESTILOS BASE thStyle, Badges, etc. */
-
 const thStyle = {
   textAlign: "left",
-  padding: "12px 14px",
-  fontSize: "12px",
-  fontWeight: 700,
-  color: "#6b7280",
-  textTransform: "uppercase",
-  letterSpacing: "0.04em",
+  padding: "12px",
   borderBottom: "1px solid #e5e7eb",
+  fontSize: "13px",
+  color: "#374151",
 };
 
 const tdStyle = {
-  padding: "14px",
-  borderBottom: "1px solid #f1f5f9",
+  padding: "12px",
+  borderBottom: "1px solid #e5e7eb",
   fontSize: "14px",
   color: "#111827",
-};;
+};
 
 const inputStyle = {
   width: "100%",
@@ -187,17 +96,6 @@ const secondaryButtonStyle = {
   fontSize: "14px",
   fontWeight: 600,
   cursor: "pointer",
-};
-
-const badgeStyle = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  borderRadius: "999px",
-  padding: "6px 10px",
-  fontSize: "12px",
-  fontWeight: 700,
-  whiteSpace: "nowrap",
 };
 
 /* EMPIEZA useState() */
@@ -780,25 +678,14 @@ async function handleDeleteTask(idTarea) {
           </div>
         </section>
       
-        <section
-        style={{
-          background: "#ffffff",
-          border: "1px solid #e5e7eb",
-          borderRadius: "16px",
-          padding: "24px",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "12px",
-            flexWrap: "wrap",
-            marginBottom: "16px",
-          }}
-        >
-          <h3 style={{ margin: 0 }}>Tareas del proyecto</h3>
+        <section style={tableStyles.tableCard}>
+        <div style={tableStyles.tableHeader}>
+          <div style={tableStyles.tableTitleWrap}>
+            <h3 style={tableStyles.tableTitle}>Tareas del proyecto</h3>
+            <p style={tableStyles.tableSubtitle}>
+              Seguimiento operativo de las tareas asociadas a la iniciativa.
+            </p>
+          </div>
 
           <button
             type="button"
@@ -820,7 +707,7 @@ async function handleDeleteTask(idTarea) {
               borderRadius: "12px",
               padding: "16px",
               marginBottom: "20px",
-              background: "#f9fafb",
+              background: "#f8fafc",
             }}
           >
             <div
@@ -952,40 +839,32 @@ async function handleDeleteTask(idTarea) {
         )}
 
         {tareas.length === 0 ? (
-          <p style={{ marginBottom: 0, color: "#6b7280" }}>
-            Este proyecto todavía no tiene tareas.
-          </p>
+          <div style={tableStyles.emptyCell}>Este proyecto todavía no tiene tareas.</div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                marginTop: "12px",
-              }}
-            >
+          <div style={tableStyles.tableWrapper}>
+            <table style={tableStyles.table}>
               <thead>
-                <tr style={{ background: "#f8fafc" }}>
-                  <th style={thStyle}>Título</th>
-                  <th style={thStyle}>Descripción</th>
-                  <th style={thStyle}>Owner</th>
-                  <th style={thStyle}>Inicio</th>
-                  <th style={thStyle}>Fin</th>
-                  <th style={thStyle}>Fase</th>
-                  <th style={thStyle}>Estado</th>
-                  <th style={thStyle}>Retraso</th>                  
-                  <th style={thStyle}>Acciones</th>
+                <tr>
+                  <th style={tableStyles.th}>Título</th>
+                  <th style={tableStyles.th}>Descripción</th>
+                  <th style={tableStyles.th}>Owner</th>
+                  <th style={tableStyles.th}>Inicio</th>
+                  <th style={tableStyles.th}>Fin</th>
+                  <th style={tableStyles.th}>Fase</th>
+                  <th style={tableStyles.th}>Estado</th>
+                  <th style={tableStyles.th}>Retraso</th>
+                  <th style={{ ...tableStyles.th, textAlign: "center" }}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {tareas.map((tarea) => (
                   <tr key={tarea.id_tarea}>
-                    <td style={tdStyle}><span style={{ fontWeight: 600 }}>{tarea.titulo || "-"}</span></td>
-                    <td style={tdStyle}>{tarea.descripcion || "-"}</td>
-                    <td style={tdStyle}><span style={{ fontWeight: 600 }}>{tarea.owner || "-"}</span></td>
-                    <td style={tdStyle}>{formatDate(tarea.fecha_inicio)}</td>
-                    <td style={tdStyle}>{formatDate(tarea.fecha_fin)}</td>
-                    <td style={tdStyle}>
+                    <td style={tableStyles.tdStrong}>{tarea.titulo || "-"}</td>
+                    <td style={tableStyles.td}>{tarea.descripcion || "-"}</td>
+                    <td style={tableStyles.tdStrong}>{tarea.owner || "-"}</td>
+                    <td style={tableStyles.td}>{formatDate(tarea.fecha_inicio)}</td>
+                    <td style={tableStyles.td}>{formatDate(tarea.fecha_fin)}</td>
+                    <td style={tableStyles.td}>
                       <span
                         style={{
                           ...badgeStyle,
@@ -995,7 +874,7 @@ async function handleDeleteTask(idTarea) {
                         {tarea.estado_tarea || "-"}
                       </span>
                     </td>
-                    <td style={tdStyle}>
+                    <td style={tableStyles.td}>
                       <span
                         style={{
                           ...badgeStyle,
@@ -1005,9 +884,9 @@ async function handleDeleteTask(idTarea) {
                         {tarea.situacion || "-"}
                       </span>
                     </td>
-                    <td style={tdStyle}>{formatTaskDelay(tarea.fecha_fin, tarea.situacion)}</td>
-                    <td style={tdStyle}>
-                      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                    <td style={tableStyles.td}>{formatTaskDelay(tarea.fecha_fin, tarea.situacion)}</td>
+                    <td style={tableStyles.tdCenter}>
+                      <div style={{ display: "inline-flex", gap: "10px", alignItems: "center" }}>
                         <button
                           type="button"
                           onClick={() => {
@@ -1031,7 +910,7 @@ async function handleDeleteTask(idTarea) {
                         >
                           <Settings size={16} />
                         </button>
-                    
+
                         <button
                           type="button"
                           onClick={() => handleDeleteTask(tarea.id_tarea)}
