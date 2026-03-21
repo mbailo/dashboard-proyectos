@@ -133,22 +133,28 @@ function getTaskStatusBadgeStyle(estado) {
 /* ESTILOS BASE thStyle, Badges, etc. */
 
 const thStyle = {
+  position: "sticky",
+  top: 0,
+  background: "#f8fafc",
   textAlign: "left",
-  padding: "12px 14px",
+  padding: "14px 14px",
   fontSize: "12px",
   fontWeight: 700,
-  color: "#6b7280",
+  color: "#475569",
   textTransform: "uppercase",
   letterSpacing: "0.04em",
-  borderBottom: "1px solid #e5e7eb",
+  borderBottom: "1px solid #dbe4ee",
+  whiteSpace: "nowrap",
 };
 
 const tdStyle = {
-  padding: "14px",
-  borderBottom: "1px solid #f1f5f9",
+  padding: "14px 14px",
+  borderBottom: "1px solid #edf2f7",
   fontSize: "14px",
-  color: "#111827",
-};;
+  color: "#334155",
+  whiteSpace: "nowrap",
+  background: "rgba(255,255,255,0.78)",
+};
 
 const inputStyle = {
   width: "100%",
@@ -198,6 +204,52 @@ const badgeStyle = {
   fontSize: "12px",
   fontWeight: 700,
   whiteSpace: "nowrap",
+};
+
+const tableCardStyle = {
+  width: "100%",
+  margin: "0 auto",
+  boxSizing: "border-box",
+  background: "rgba(255,255,255,0.92)",
+  border: "1px solid #dbe4ee",
+  borderRadius: "20px",
+  padding: "18px",
+  boxShadow: "0 14px 36px rgba(15, 23, 42, 0.08)",
+  backdropFilter: "blur(8px)",
+};
+
+const tableHeaderStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "12px",
+  flexWrap: "wrap",
+  marginBottom: "14px",
+};
+
+const tableTitleStyle = {
+  margin: 0,
+  fontSize: "22px",
+  color: "#0f172a",
+};
+
+const tableSubtitleStyle = {
+  margin: "4px 0 0 0",
+  fontSize: "13px",
+  color: "#64748b",
+};
+
+const tableWrapperStyle = {
+  width: "100%",
+  overflowX: "auto",
+};
+
+const tableStyle = {
+  width: "100%",
+  minWidth: "1100px",
+  margin: "0 auto",
+  borderCollapse: "separate",
+  borderSpacing: 0,
 };
 
 /* EMPIEZA useState() */
@@ -780,25 +832,14 @@ async function handleDeleteTask(idTarea) {
           </div>
         </section>
       
-        <section
-        style={{
-          background: "#ffffff",
-          border: "1px solid #e5e7eb",
-          borderRadius: "16px",
-          padding: "24px",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "12px",
-            flexWrap: "wrap",
-            marginBottom: "16px",
-          }}
-        >
-          <h3 style={{ margin: 0 }}>Tareas del proyecto</h3>
+        <section style={tableCardStyle}>
+        <div style={tableHeaderStyle}>
+          <div>
+            <h3 style={tableTitleStyle}>Tareas del proyecto</h3>
+            <p style={tableSubtitleStyle}>
+              Mismo contenido y badges, con el formato visual alineado con la tabla de detalle del universo.
+            </p>
+          </div>
 
           <button
             type="button"
@@ -956,16 +997,10 @@ async function handleDeleteTask(idTarea) {
             Este proyecto todavía no tiene tareas.
           </p>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                marginTop: "12px",
-              }}
-            >
+          <div style={tableWrapperStyle}>
+            <table style={tableStyle}>
               <thead>
-                <tr style={{ background: "#f8fafc" }}>
+                <tr>
                   <th style={thStyle}>Título</th>
                   <th style={thStyle}>Descripción</th>
                   <th style={thStyle}>Owner</th>
@@ -980,9 +1015,9 @@ async function handleDeleteTask(idTarea) {
               <tbody>
                 {tareas.map((tarea) => (
                   <tr key={tarea.id_tarea}>
-                    <td style={tdStyle}><span style={{ fontWeight: 600 }}>{tarea.titulo || "-"}</span></td>
+                    <td style={{ ...tdStyle, fontWeight: 700, color: "#0f172a" }}>{tarea.titulo || "-"}</td>
                     <td style={tdStyle}>{tarea.descripcion || "-"}</td>
-                    <td style={tdStyle}><span style={{ fontWeight: 600 }}>{tarea.owner || "-"}</span></td>
+                    <td style={{ ...tdStyle, fontWeight: 700, color: "#0f172a" }}>{tarea.owner || "-"}</td>
                     <td style={tdStyle}>{formatDate(tarea.fecha_inicio)}</td>
                     <td style={tdStyle}>{formatDate(tarea.fecha_fin)}</td>
                     <td style={tdStyle}>
@@ -1062,25 +1097,14 @@ async function handleDeleteTask(idTarea) {
         )}
       </section>
 
-      <section
-        style={{
-          background: "#ffffff",
-          border: "1px solid #e5e7eb",
-          borderRadius: "16px",
-          padding: "24px",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "12px",
-            flexWrap: "wrap",
-            marginBottom: "16px",
-          }}
-        >
-          <h3 style={{ margin: 0 }}>Costes del proyecto</h3>
+      <section style={tableCardStyle}>
+        <div style={tableHeaderStyle}>
+          <div>
+            <h3 style={tableTitleStyle}>Costes del proyecto</h3>
+            <p style={tableSubtitleStyle}>
+              Tabla con el mismo lenguaje visual que en UniverseDetailPage.
+            </p>
+          </div>
 
           <button
             type="button"
@@ -1215,16 +1239,10 @@ async function handleDeleteTask(idTarea) {
             Este proyecto todavía no tiene costes.
           </p>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                marginTop: "12px",
-              }}
-            >
+          <div style={tableWrapperStyle}>
+            <table style={tableStyle}>
               <thead>
-                <tr style={{ background: "#f9fafb" }}>
+                <tr>
                   <th style={thStyle}>Id Coste</th>
                   <th style={thStyle}>Título</th>
                   <th style={thStyle}>Descripción</th>
@@ -1236,7 +1254,7 @@ async function handleDeleteTask(idTarea) {
                 {costes.map((coste) => (
                   <tr key={coste.id_coste}>
                     <td style={tdStyle}>{coste.id_coste}</td>
-                    <td style={tdStyle}>{coste.titulo || "-"}</td>
+                    <td style={{ ...tdStyle, fontWeight: 700, color: "#0f172a" }}>{coste.titulo || "-"}</td>
                     <td style={tdStyle}>{coste.descripcion || "-"}</td>
                     <td style={tdStyle}>{coste.tipo_coste || "-"}</td>
                     <td style={tdStyle}>{formatCurrency(coste.importe)}</td>
