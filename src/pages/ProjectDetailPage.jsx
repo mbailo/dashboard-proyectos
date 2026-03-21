@@ -16,6 +16,25 @@ function formatDate(value) {
   return new Intl.DateTimeFormat("es-ES").format(new Date(value));
 }
 
+function formatTaskDelay(fechaFin, situacion) {
+  if (!fechaFin || situacion !== "Retrasado") return "-";
+
+  const today = new Date();
+  const end = new Date(fechaFin);
+
+  today.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+
+  const diffMs = today - end;
+
+  if (diffMs <= 0) return "-";
+
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffWeeks = Math.ceil(diffDays / 7);
+
+  return `-${diffWeeks} wks`;
+}
+
 function InfoCard({ label, value }) {
   return (
     <div
@@ -869,8 +888,9 @@ async function handleDeleteTask(idTarea) {
                   <th style={thStyle}>Owner</th>
                   <th style={thStyle}>Inicio</th>
                   <th style={thStyle}>Fin</th>
+                  <th style={thStyle}>Fase</th>
                   <th style={thStyle}>Estado</th>
-                  <th style={thStyle}>Situación</th>
+                  <th style={thStyle}>Retraso</th>                  
                   <th style={thStyle}>Acciones</th>
                 </tr>
               </thead>
@@ -884,6 +904,7 @@ async function handleDeleteTask(idTarea) {
                     <td style={tdStyle}>{formatDate(tarea.fecha_fin)}</td>
                     <td style={tdStyle}>{tarea.estado_tarea || "-"}</td>
                     <td style={tdStyle}>{tarea.situacion || "-"}</td>
+                    <td style={tdStyle}>{formatTaskDelay(tarea.fecha_fin, tarea.situacion)}</td>
                     <td style={tdStyle}>
                       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                         <button
