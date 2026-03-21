@@ -341,7 +341,7 @@ function KpiCard({ label, value, accent }) {
     <div
       style={{
         ...styles.kpiCard,
-        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.75), 0 6px 16px ${accent}`,
+        boxShadow: `0 6px 18px ${accent}`,
       }}
     >
       <div style={styles.kpiLabel}>{label}</div>
@@ -484,17 +484,17 @@ export default function UniverseDetailPage() {
 
           <div style={styles.kpiGrid}>
             <KpiCard
-              label="Nº de proyectos"
+              label="Total Proyectos"
               value={kpis.num_proyectos ?? 0}
               accent="rgba(59, 130, 246, 0.08)"
             />
             <KpiCard
-              label="Total de tareas"
+              label="Total Tareas"
               value={kpis.total_tareas ?? 0}
               accent="rgba(14, 165, 233, 0.08)"
             />
             <KpiCard
-              label="Tareas finalizadas"
+              label="Tareas Finalizadas"
               value={kpis.tareas_finalizadas ?? 0}
               accent="rgba(34, 197, 94, 0.08)"
             />
@@ -504,26 +504,27 @@ export default function UniverseDetailPage() {
               accent="rgba(16, 185, 129, 0.08)"
             />
             <KpiCard
-              label="Estimación impacto total"
+              label="E. Impacto Total"
               value={formatCurrency(kpis.impacto_total_estimado)}
               accent="rgba(99, 102, 241, 0.08)"
             />
             <KpiCard
-              label="Estimación coste / inversión total"
+              label="E. Inversión / Gasto Total"
               value={formatCurrency(kpis.inversion_total_estimada)}
               accent="rgba(244, 114, 182, 0.08)"
             />
             <KpiCard
-              label="Estimación impacto proyectos QW"
+              label="E. Impacto QW"
               value={formatCurrency(kpis.impacto_qw_estimado)}
               accent="rgba(250, 204, 21, 0.10)"
             />
             <KpiCard
-              label="Estimación coste / inversión proyectos QW"
+              label="E. Inversión / Gasto QW"
               value={formatCurrency(kpis.inversion_qw_estimada)}
               accent="rgba(249, 115, 22, 0.08)"
             />
           </div>
+        </div>
         </section>
 
         <GanttChart projects={projects} />
@@ -687,29 +688,32 @@ const styles = {
   kpiGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-    gap: 8,
+    gap: 10,
   },
   kpiCard: {
-    minHeight: 68,
-    borderRadius: 16,
+    minHeight: 62,
+    borderRadius: 14,
     border: "1px solid #dbe4ee",
-    background: "rgba(255,255,255,0.88)",
-    padding: "10px 12px",
+    background: "#ffffff",
+    padding: "8px 12px",
     display: "flex",
     flexDirection: "column",
-    justifyContent: "space-between",
-    backdropFilter: "blur(8px)",
+    justifyContent: "center",
   },
   kpiLabel: {
-    fontSize: 11,
+    fontSize: 10,
     color: "#64748b",
-    lineHeight: 1.25,
+    marginBottom: 4,
+    lineHeight: 1.15,
   },
   kpiValue: {
-    fontSize: 19,
+    fontSize: "clamp(16px, 1.5vw, 20px)",
     lineHeight: 1.05,
     fontWeight: 700,
     color: "#0f172a",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
   },
   ganttCard: {
     width: "100%",
