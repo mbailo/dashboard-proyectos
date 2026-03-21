@@ -623,6 +623,8 @@ async function handleDeleteTask(idTarea) {
 
   const nombreUniverso = proyecto.universos_negocio?.nombre || "-";
 
+/* RETURN */
+  
   return (
     <div style={{ display: "grid", gap: "24px" }}>
         <section
@@ -915,6 +917,8 @@ async function handleDeleteTask(idTarea) {
           </button>
         </div>
 
+          /* FORMULARIO DE ALTA DE TAREA  */
+          
         {showTaskForm && (
           <form
             onSubmit={handleCreateTask}
@@ -952,7 +956,7 @@ async function handleDeleteTask(idTarea) {
                   name="descripcion"
                   value={taskForm.descripcion}
                   onChange={handleTaskFormChange}
-                  maxLength={256}
+                  maxLength={512}
                   style={{
                     ...inputStyle,
                     minHeight: "90px",
@@ -974,7 +978,7 @@ async function handleDeleteTask(idTarea) {
               </div>
 
               <div>
-                <label style={labelStyle}>Estado</label>
+                <label style={labelStyle}>Fase</label>
                 <select
                   name="estado_tarea"
                   value={taskForm.estado_tarea}
@@ -989,7 +993,7 @@ async function handleDeleteTask(idTarea) {
               </div>
 
               <div>
-                <label style={labelStyle}>Situación</label>
+                <label style={labelStyle}>Estado</label>
                 <select
                   name="situacion"
                   value={taskForm.situacion}
@@ -1427,6 +1431,7 @@ async function handleDeleteTask(idTarea) {
                 onChange={(e) =>
                   setEditingTask({ ...editingTask, titulo: e.target.value })
                 }
+                maxLength={32}
                 style={{
                   width: "100%",
                   padding: "10px 12px",
@@ -1455,6 +1460,7 @@ async function handleDeleteTask(idTarea) {
                 onChange={(e) =>
                   setEditingTask({ ...editingTask, descripcion: e.target.value })
                 }
+                maxLength={512}
                 rows={4}
                 style={{
                   width: "100%",
