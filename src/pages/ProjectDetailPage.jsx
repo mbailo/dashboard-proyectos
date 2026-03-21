@@ -189,96 +189,6 @@ const secondaryButtonStyle = {
   cursor: "pointer",
 };
 
-const taskTableStyles = {
-  tableCard: {
-    width: "100%",
-    margin: "0 auto",
-    boxSizing: "border-box",
-    background: "rgba(255,255,255,0.92)",
-    border: "1px solid #dbe4ee",
-    borderRadius: "20px",
-    padding: "18px",
-    boxShadow: "0 14px 36px rgba(15, 23, 42, 0.08)",
-    backdropFilter: "blur(8px)",
-  },
-  tableHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: "12px",
-    marginBottom: "14px",
-    flexWrap: "wrap",
-  },
-  tableTitleWrap: {
-    minWidth: 0,
-  },
-  tableTitle: {
-    margin: 0,
-    fontSize: "22px",
-    color: "#0f172a",
-  },
-  tableSubtitle: {
-    margin: "4px 0 0 0",
-    fontSize: "13px",
-    color: "#64748b",
-  },
-  tableWrapper: {
-    width: "100%",
-    overflowX: "auto",
-  },
-  table: {
-    width: "100%",
-    minWidth: "1100px",
-    margin: "0 auto",
-    borderCollapse: "separate",
-    borderSpacing: 0,
-  },
-  th: {
-    position: "sticky",
-    top: 0,
-    background: "#f8fafc",
-    color: "#475569",
-    fontSize: "12px",
-    fontWeight: 700,
-    textTransform: "uppercase",
-    letterSpacing: "0.04em",
-    padding: "14px 14px",
-    textAlign: "left",
-    borderBottom: "1px solid #dbe4ee",
-    whiteSpace: "nowrap",
-  },
-  td: {
-    padding: "14px 14px",
-    borderBottom: "1px solid #edf2f7",
-    color: "#334155",
-    fontSize: "14px",
-    whiteSpace: "nowrap",
-    background: "rgba(255,255,255,0.78)",
-  },
-  tdStrong: {
-    padding: "14px 14px",
-    borderBottom: "1px solid #edf2f7",
-    color: "#0f172a",
-    fontSize: "14px",
-    fontWeight: 700,
-    whiteSpace: "nowrap",
-    background: "rgba(255,255,255,0.78)",
-  },
-  tdCenter: {
-    padding: "14px 14px",
-    borderBottom: "1px solid #edf2f7",
-    textAlign: "center",
-    whiteSpace: "nowrap",
-    background: "rgba(255,255,255,0.78)",
-  },
-  emptyCell: {
-    padding: "24px",
-    textAlign: "center",
-    color: "#64748b",
-    borderBottom: "1px solid #edf2f7",
-  },
-};
-
 const badgeStyle = {
   display: "inline-flex",
   alignItems: "center",
@@ -289,7 +199,6 @@ const badgeStyle = {
   fontWeight: 700,
   whiteSpace: "nowrap",
 };
-
 
 /* EMPIEZA useState() */
 
@@ -871,14 +780,25 @@ async function handleDeleteTask(idTarea) {
           </div>
         </section>
       
-        <section style={tableStyles.tableCard}>
-        <div style={tableStyles.tableHeader}>
-          <div style={tableStyles.tableTitleWrap}>
-            <h3 style={tableStyles.tableTitle}>Tareas del proyecto</h3>
-            <p style={tableStyles.tableSubtitle}>
-              Seguimiento operativo de las tareas asociadas a la iniciativa.
-            </p>
-          </div>
+        <section
+        style={{
+          background: "#ffffff",
+          border: "1px solid #e5e7eb",
+          borderRadius: "16px",
+          padding: "24px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "12px",
+            flexWrap: "wrap",
+            marginBottom: "16px",
+          }}
+        >
+          <h3 style={{ margin: 0 }}>Tareas del proyecto</h3>
 
           <button
             type="button"
@@ -1032,32 +952,40 @@ async function handleDeleteTask(idTarea) {
         )}
 
         {tareas.length === 0 ? (
-          <div style={tableStyles.emptyCell}>Este proyecto todavía no tiene tareas.</div>
+          <p style={{ marginBottom: 0, color: "#6b7280" }}>
+            Este proyecto todavía no tiene tareas.
+          </p>
         ) : (
-          <div style={tableStyles.tableWrapper}>
-            <table style={tableStyles.table}>
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                marginTop: "12px",
+              }}
+            >
               <thead>
-                <tr>
-                  <th style={tableStyles.th}>Título</th>
-                  <th style={tableStyles.th}>Descripción</th>
-                  <th style={tableStyles.th}>Owner</th>
-                  <th style={tableStyles.th}>Fecha inicio</th>
-                  <th style={tableStyles.th}>Fecha fin</th>
-                  <th style={tableStyles.th}>Fase</th>
-                  <th style={tableStyles.th}>Estado</th>
-                  <th style={tableStyles.th}>Retraso</th>
-                  <th style={{ ...tableStyles.th, textAlign: "center" }}>Acciones</th>
+                <tr style={{ background: "#f8fafc" }}>
+                  <th style={thStyle}>Título</th>
+                  <th style={thStyle}>Descripción</th>
+                  <th style={thStyle}>Owner</th>
+                  <th style={thStyle}>Inicio</th>
+                  <th style={thStyle}>Fin</th>
+                  <th style={thStyle}>Fase</th>
+                  <th style={thStyle}>Estado</th>
+                  <th style={thStyle}>Retraso</th>                  
+                  <th style={thStyle}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {tareas.map((tarea) => (
                   <tr key={tarea.id_tarea}>
-                    <td style={tableStyles.tdStrong}>{tarea.titulo || "-"}</td>
-                    <td style={tableStyles.td}>{tarea.descripcion || "-"}</td>
-                    <td style={tableStyles.tdStrong}>{tarea.owner || "-"}</td>
-                    <td style={tableStyles.td}>{formatDate(tarea.fecha_inicio)}</td>
-                    <td style={tableStyles.td}>{formatDate(tarea.fecha_fin)}</td>
-                    <td style={tableStyles.td}>
+                    <td style={tdStyle}><span style={{ fontWeight: 600 }}>{tarea.titulo || "-"}</span></td>
+                    <td style={tdStyle}>{tarea.descripcion || "-"}</td>
+                    <td style={tdStyle}><span style={{ fontWeight: 600 }}>{tarea.owner || "-"}</span></td>
+                    <td style={tdStyle}>{formatDate(tarea.fecha_inicio)}</td>
+                    <td style={tdStyle}>{formatDate(tarea.fecha_fin)}</td>
+                    <td style={tdStyle}>
                       <span
                         style={{
                           ...badgeStyle,
@@ -1067,21 +995,19 @@ async function handleDeleteTask(idTarea) {
                         {tarea.estado_tarea || "-"}
                       </span>
                     </td>
-                    <td style={tableStyles.td}>
+                    <td style={tdStyle}>
                       <span
                         style={{
                           ...badgeStyle,
-                          ...getTaskSituationBadgeStyle(tarea.situacion),
+                          ...getTaskStatusBadgeStyle(tarea.situacion),
                         }}
                       >
                         {tarea.situacion || "-"}
                       </span>
                     </td>
-                    <td style={tableStyles.td}>
-                      {formatTaskDelay(tarea.fecha_fin, tarea.situacion)}
-                    </td>
-                    <td style={tableStyles.tdCenter}>
-                      <div style={{ display: "inline-flex", gap: "10px", alignItems: "center" }}>
+                    <td style={tdStyle}>{formatTaskDelay(tarea.fecha_fin, tarea.situacion)}</td>
+                    <td style={tdStyle}>
+                      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                         <button
                           type="button"
                           onClick={() => {
@@ -1105,7 +1031,7 @@ async function handleDeleteTask(idTarea) {
                         >
                           <Settings size={16} />
                         </button>
-
+                    
                         <button
                           type="button"
                           onClick={() => handleDeleteTask(tarea.id_tarea)}
@@ -1124,7 +1050,7 @@ async function handleDeleteTask(idTarea) {
                             cursor: "pointer",
                           }}
                         >
-                          <Trash2 size={16} />
+                          <Trash size={16} />
                         </button>
                       </div>
                     </td>
