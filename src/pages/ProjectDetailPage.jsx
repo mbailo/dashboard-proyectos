@@ -154,6 +154,64 @@ const tdStyle = {
   color: "#334155",
   whiteSpace: "nowrap",
   background: "rgba(255,255,255,0.78)",
+  verticalAlign: "top",
+};
+
+const tdTitleStyle = {
+  ...tdStyle,
+  width: "180px",
+  maxWidth: "180px",
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  fontWeight: 700,
+  color: "#0f172a",
+};
+
+const tdDescriptionStyle = {
+  ...tdStyle,
+  width: "320px",
+  minWidth: "320px",
+  maxWidth: "320px",
+  whiteSpace: "normal",
+  wordBreak: "break-word",
+  overflowWrap: "anywhere",
+  lineHeight: 1.4,
+};
+
+const tdOwnerStyle = {
+  ...tdStyle,
+  width: "140px",
+  maxWidth: "140px",
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  fontWeight: 700,
+  color: "#0f172a",
+};
+
+const tdDateStyle = {
+  ...tdStyle,
+  width: "110px",
+  whiteSpace: "nowrap",
+};
+
+const tdBadgeStyle = {
+  ...tdStyle,
+  width: "140px",
+  whiteSpace: "nowrap",
+};
+
+const tdDelayStyle = {
+  ...tdStyle,
+  width: "90px",
+  whiteSpace: "nowrap",
+};
+
+const tdActionsStyle = {
+  ...tdStyle,
+  width: "110px",
+  whiteSpace: "nowrap",
 };
 
 const inputStyle = {
@@ -250,6 +308,7 @@ const tableStyle = {
   margin: "0 auto",
   borderCollapse: "separate",
   borderSpacing: 0,
+  tableLayout: "fixed",
 };
 
 /* EMPIEZA useState() */
@@ -882,6 +941,7 @@ async function handleDeleteTask(idTarea) {
                   value={taskForm.titulo}
                   onChange={handleTaskFormChange}
                   style={inputStyle}
+                  maxLength={32}
                   required
                 />
               </div>
@@ -892,6 +952,7 @@ async function handleDeleteTask(idTarea) {
                   name="descripcion"
                   value={taskForm.descripcion}
                   onChange={handleTaskFormChange}
+                  maxLength={256}
                   style={{
                     ...inputStyle,
                     minHeight: "90px",
@@ -900,7 +961,7 @@ async function handleDeleteTask(idTarea) {
                   }}
                 />
               </div>
-              
+
               <div>
                 <label style={labelStyle}>Owner</label>
                 <input
@@ -1019,26 +1080,30 @@ async function handleDeleteTask(idTarea) {
             <table style={tableStyle}>
               <thead>
                 <tr>
-                  <th style={thStyle}>Título</th>
-                  <th style={thStyle}>Descripción</th>
-                  <th style={thStyle}>Owner</th>
-                  <th style={thStyle}>Inicio</th>
-                  <th style={thStyle}>Fin</th>
-                  <th style={thStyle}>Fase</th>
-                  <th style={thStyle}>Estado</th>
-                  <th style={thStyle}>Retraso</th>                  
-                  <th style={thStyle}>Acciones</th>
+                  <th style={{ ...thStyle, width: "180px" }}>Título</th>
+                  <th style={{ ...thStyle, width: "320px" }}>Descripción</th>
+                  <th style={{ ...thStyle, width: "140px" }}>Owner</th>
+                  <th style={{ ...thStyle, width: "110px" }}>Inicio</th>
+                  <th style={{ ...thStyle, width: "110px" }}>Fin</th>
+                  <th style={{ ...thStyle, width: "140px" }}>Fase</th>
+                  <th style={{ ...thStyle, width: "140px" }}>Estado</th>
+                  <th style={{ ...thStyle, width: "90px" }}>Retraso</th>
+                  <th style={{ ...thStyle, width: "110px" }}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {tareas.map((tarea) => (
                   <tr key={tarea.id_tarea}>
-                    <td style={{ ...tdStyle, fontWeight: 700, color: "#0f172a" }}>{tarea.titulo || "-"}</td>
-                    <td style={tdStyle}>{tarea.descripcion || "-"}</td>
-                    <td style={{ ...tdStyle, fontWeight: 700, color: "#0f172a" }}>{tarea.owner || "-"}</td>
-                    <td style={tdStyle}>{formatDate(tarea.fecha_inicio)}</td>
-                    <td style={tdStyle}>{formatDate(tarea.fecha_fin)}</td>
-                    <td style={tdStyle}>
+                    <td style={tdTitleStyle} title={tarea.titulo || ""}>
+                      {tarea.titulo || "-"}
+                    </td>
+                    <td style={tdDescriptionStyle}>{tarea.descripcion || "-"}</td>
+                    <td style={tdOwnerStyle} title={tarea.owner || ""}>
+                      {tarea.owner || "-"}
+                    </td>
+                    <td style={tdDateStyle}>{formatDate(tarea.fecha_inicio)}</td>
+                    <td style={tdDateStyle}>{formatDate(tarea.fecha_fin)}</td>
+                    <td style={tdBadgeStyle}>
                       <span
                         style={{
                           ...badgeStyle,
@@ -1048,7 +1113,7 @@ async function handleDeleteTask(idTarea) {
                         {tarea.estado_tarea || "-"}
                       </span>
                     </td>
-                    <td style={tdStyle}>
+                    <td style={tdBadgeStyle}>
                       <span
                         style={{
                           ...badgeStyle,
@@ -1058,8 +1123,8 @@ async function handleDeleteTask(idTarea) {
                         {tarea.situacion || "-"}
                       </span>
                     </td>
-                    <td style={tdStyle}>{formatTaskDelay(tarea.fecha_fin, tarea.situacion)}</td>
-                    <td style={tdStyle}>
+                    <td style={tdDelayStyle}>{formatTaskDelay(tarea.fecha_fin, tarea.situacion)}</td>
+                    <td style={tdActionsStyle}>
                       <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                         <button
                           type="button"
