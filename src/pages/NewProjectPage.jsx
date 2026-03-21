@@ -15,9 +15,9 @@ export default function NewProjectPage() {
     beneficios: "",
     impacto_estimado: "",
     owner: "",
-    horizonte: "",
-    fecha_inicio: "",
-    fecha_fin: ""
+    horizonte: ""
+//    fecha_inicio: "",
+//    fecha_fin: ""
   });
 
   useEffect(() => {
@@ -61,9 +61,9 @@ export default function NewProjectPage() {
       p_owner: form.owner,
       p_horizonte: form.horizonte,
       p_fase: "En Definición",
-      p_situacion: "En tiempo",
-      p_fecha_inicio: form.fecha_inicio || null,
-      p_fecha_fin: form.fecha_fin || null
+      p_situacion: "En tiempo"
+//      p_fecha_inicio: form.fecha_inicio || null,
+//      p_fecha_fin: form.fecha_fin || null
     });
 
     if (error) {
@@ -330,8 +330,9 @@ export default function NewProjectPage() {
                   />
                 </div>
               </div>
-
-              <div style={styles.grid2}>
+              
+{/*   // Eliminamos el bloque dónde pedimos fecha inicio y fecha fin
+           <div style={styles.grid2}>
                 <div style={styles.field}>
                   <label style={styles.label}>Fecha inicio</label>
                   <input
@@ -354,6 +355,7 @@ export default function NewProjectPage() {
                   />
                 </div>
               </div>
+*/}
 
               <div style={styles.grid2}>
                 <div style={styles.field}>
