@@ -1321,6 +1321,8 @@ async function handleDeleteTask(idTarea) {
           </form>
         )}
 
+        /* TABLA DE COSTES */
+        
         {costes.length === 0 ? (
           <p style={{ marginBottom: 0, color: "#6b7280" }}>
             Este proyecto todavía no tiene costes.
@@ -1330,21 +1332,64 @@ async function handleDeleteTask(idTarea) {
             <table style={tableStyle}>
               <thead>
                 <tr>
-                  <th style={thStyle}>Id Coste</th>
-                  <th style={thStyle}>Título</th>
-                  <th style={thStyle}>Descripción</th>
-                  <th style={thStyle}>Tipo</th>
-                  <th style={thStyle}>Importe</th>
+                  <th style={{ ...thStyle, width: "120px" }}>Id Coste</th>
+                  <th style={{ ...thStyle, width: "180px" }}>Título</th>
+                  <th style={{ ...thStyle, width: "400px" }}>Descripción</th>
+                  <th style={{ ...thStyle, width: "140px" }}>Tipo</th>
+                  <th style={{ ...thStyle, width: "140px" }}>Importe</th>
                 </tr>
               </thead>
               <tbody>
                 {costes.map((coste) => (
                   <tr key={coste.id_coste}>
-                    <td style={tdStyle}>{coste.id_coste}</td>
-                    <td style={{ ...tdStyle, fontWeight: 700, color: "#0f172a" }}>{coste.titulo || "-"}</td>
-                    <td style={tdStyle}>{coste.descripcion || "-"}</td>
-                    <td style={tdStyle}>{coste.tipo_coste || "-"}</td>
-                    <td style={tdStyle}>{formatCurrency(coste.importe)}</td>
+                    <td style={{ ...tdStyle, width: "120px", whiteSpace: "nowrap" }}>{coste.id_coste}</td>
+                    <td
+                      style={{
+                        ...tdStyle,
+                        width: "180px",
+                        maxWidth: "180px",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        fontWeight: 700,
+                        color: "#0f172a",
+                      }}
+                      title={coste.titulo || ""}
+                    >
+                      {coste.titulo || "-"}
+                    </td>
+                    <td
+                      style={{
+                        ...tdStyle,
+                        width: "400px",
+                        maxWidth: "400px",
+                        whiteSpace: "normal",
+                        wordBreak: "break-word",
+                        overflowWrap: "anywhere",
+                      }}
+                    >
+                      {coste.descripcion || "-"}
+                    </td>
+                    <td
+                      style={{
+                        ...tdStyle,
+                        width: "140px",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {coste.tipo_coste || "-"}
+                    </td>
+                    <td
+                      style={{
+                        ...tdStyle,
+                        width: "140px",
+                        whiteSpace: "nowrap",
+                        textAlign: "right",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {formatCurrency(coste.importe)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
