@@ -235,8 +235,20 @@ function buildTaskTimeline(tasks, project) {
   const fixedStart = new Date(currentYear, 0, 1);
   const fixedEnd = new Date(currentYear, 11, 31);
 
-  const taskStarts = tasks.map((t) => parseDate(t.fecha_inicio)).filter(Boolean);
-  const taskEnds = tasks.map((t) => parseDate(t.fecha_fin)).filter(Boolean);
+  const taskStarts = tasks
+    .flatMap((t) => [parseDate(t.fecha_inicio), parseDate(t.fecha_inicio_real)])
+    .filter(Boolean);
+
+  const taskEnds = tasks
+    .flatMap((t) => {
+      const realStart = parseDate(t.fecha_inicio_real);
+      const realEnd = parseDate(t.fecha_fin_real);
+      const actualVisibleEnd = realEnd || (realStart ? today : null);
+
+      return [parseDate(t.fecha_fin), actualVisibleEnd];
+    })
+    .filter(Boolean);
+
   const projectStart = parseDate(project?.fecha_inicio);
   const projectEnd = parseDate(project?.fecha_fin);
 
@@ -372,16 +384,31 @@ function TaskGanttChart({ tasks, project }) {
             {tasks.map((task) => {
               const start = parseDate(task.fecha_inicio);
               const end = parseDate(task.fecha_fin);
+
+              const realStart = parseDate(task.fecha_inicio_real);
+              const realEnd = parseDate(task.fecha_fin_real);
+              const visibleRealEnd = realEnd || (realStart ? new Date() : null);
+
               const trafficLabel = normalizeSituation(task.situacion);
 
               let leftPct = 0;
               let widthPct = 0;
+
+              let realLeftPct = 0;
+              let realWidthPct = 0;
 
               if (start && end) {
                 const boundedStart = start < timeline.start ? timeline.start : start;
                 const boundedEnd = end > timeline.end ? timeline.end : end;
                 leftPct = (diffDays(timeline.start, boundedStart) / timeline.totalDays) * 100;
                 widthPct = ((diffDays(boundedStart, boundedEnd) + 1) / timeline.totalDays) * 100;
+              }
+
+              if (realStart && visibleRealEnd) {
+                const boundedRealStart = realStart < timeline.start ? timeline.start : realStart;
+                const boundedRealEnd = visibleRealEnd > timeline.end ? timeline.end : visibleRealEnd;
+                realLeftPct = (diffDays(timeline.start, boundedRealStart) / timeline.totalDays) * 100;
+                realWidthPct = ((diffDays(boundedRealStart, boundedRealEnd) + 1) / timeline.totalDays) * 100;
               }
 
               return (
@@ -413,16 +440,30 @@ function TaskGanttChart({ tasks, project }) {
                     />
 
                     {start && end ? (
-                      <div
-                        style={{
-                          ...styles.ganttBar,
-                          left: `${Math.max(0, leftPct)}%`,
-                          width: `${Math.max(widthPct, 1.4)}%`,
-                        }}
-                        title={`${task.titulo} · ${formatDate(task.fecha_inicio)} → ${formatDate(task.fecha_fin)}`}
-                      >
-                        <span style={styles.ganttBarLabel}>{getBarLabel(task.estado_tarea)}</span>
-                      </div>
+                      <>
+                        <div
+                          style={{
+                            ...styles.ganttBar,
+                            left: `${Math.max(0, leftPct)}%`,
+                            width: `${Math.max(widthPct, 1.4)}%`,
+                          }}
+                          title={`${task.titulo} · Plan: ${formatDate(task.fecha_inicio)} → ${formatDate(task.fecha_fin)}`}
+                        >
+                          <span style={styles.ganttBarLabel}>{getBarLabel(task.estado_tarea)}</span>
+                        </div>
+
+                        {realStart && visibleRealEnd && (
+                          <div
+                            style={{
+                              ...styles.ganttBarReal,
+                              left: `${Math.max(0, realLeftPct)}%`,
+                              width: `${Math.max(realWidthPct, 1.2)}%`,
+                              background: getSituationColor(task.situacion),
+                            }}
+                            title={`${task.titulo} · Real: ${formatDate(task.fecha_inicio_real)} → ${task.fecha_fin_real ? formatDate(task.fecha_fin_real) : "Hoy"}`}
+                          />
+                        )}
+                      </>
                     ) : (
                       <div style={styles.ganttNoDates}>Sin fechas</div>
                     )}
@@ -838,6 +879,14 @@ const styles = {
     justifyContent: "flex-end",
     paddingRight: 6,
     zIndex: 3,
+  },
+  ganttBarReal: {
+    position: "absolute",
+    top: "calc(50% + 10px)",
+    height: 4,
+    borderRadius: 999,
+    boxShadow: "0 1px 4px rgba(15,23,42,0.18)",
+    zIndex: 2,
   },
   ganttBarLabel: {
     fontSize: 10,
@@ -1612,9 +1661,9 @@ export default function ProjectDetailPage() {
               </div>
             </form>
           )}
-          
+
           {/*  ===== HEADER DE LA TABLA DE TAREAS ===== */}
-          
+
           {tareas.length === 0 ? (
             <p style={{ marginBottom: 0, color: "#6b7280" }}>Este proyecto todavía no tiene tareas.</p>
           ) : (
@@ -1933,7 +1982,7 @@ export default function ProjectDetailPage() {
         </section>
 
 {/* ===== MODAL EDICIÓN TAREA ===== */}
-        
+
         {showEditModal && editingTask && (
           <div
             style={{
