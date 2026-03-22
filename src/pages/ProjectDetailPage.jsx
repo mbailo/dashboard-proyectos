@@ -293,7 +293,7 @@ function buildTaskTimeline(tasks, project) {
 
   const weekStart = addDays(today, -((today.getDay() + 6) % 7));
   const currentLinePct =
-    today < start ? 0 : today > end ? 100 : (diffDays(start, weekStart) / totalDays) * 100;
+    today < start ? 0 : today > end ? 100 : (diffDays(start, today) / totalDays) * 100;
 
   return { start, end, totalDays, months, currentLinePct };
 }
@@ -326,7 +326,7 @@ function TaskGanttChart({ tasks, project }) {
           </div>
           <div style={styles.legendItem}>
             <span style={{ ...styles.legendLine, background: "#0f172a" }} />
-            <span>Semana actual</span>
+            <span>Hoy</span>
           </div>
           <div style={styles.legendItem}>
             <span style={{ ...styles.trafficDot, background: getSituationColor("En tiempo") }} />
@@ -372,10 +372,10 @@ function TaskGanttChart({ tasks, project }) {
                 <div
                   style={{
                     ...styles.currentWeekTag,
-                    left: `min(${Math.max(timeline.currentLinePct, 1)}%, calc(100% - 84px))`,
+                    left: `min(${Math.max(timeline.currentLinePct, 1)}%, calc(100% - 50px))`,
                   }}
                 >
-                  Semana actual
+                  Hoy
                 </div>
               </div>
               <div style={styles.ganttStatusHeader}>Estado</div>
