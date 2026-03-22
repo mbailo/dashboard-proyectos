@@ -902,10 +902,10 @@ export default function ProjectDetailPage() {
     titulo: "",
     descripcion: "",
     owner: "",
-    estado_tarea: "No Iniciada",
-    situacion: "En tiempo",
-    fecha_inicio: "",
-    fecha_fin: "",
+    Fase: "No Iniciada",
+    Estado: "En tiempo",
+    fecha_inicio_real: "",
+    fecha_fin_real: "",
   });
 
   const [showCostForm, setShowCostForm] = useState(false);
@@ -959,7 +959,9 @@ export default function ProjectDetailPage() {
         estado_tarea,
         situacion,
         fecha_inicio,
-        fecha_fin
+        fecha_fin,
+        fecha_inicio_real,
+        fecha_fin_real
       `)
       .eq("id_proyecto", projectId)
       .order("fecha_inicio", { ascending: true })
@@ -1028,8 +1030,8 @@ export default function ProjectDetailPage() {
         owner: editingTask.owner,
         estado_tarea: editingTask.estado_tarea,
         situacion: editingTask.situacion,
-        fecha_inicio: editingTask.fecha_inicio || null,
-        fecha_fin: editingTask.fecha_fin || null,
+        fecha_inicio_real: editingTask.fecha_inicio_real || null,
+        fecha_fin_real: editingTask.fecha_fin_real || null,
       })
       .eq("id_tarea", editingTask.id_tarea);
 
@@ -1667,7 +1669,11 @@ export default function ProjectDetailPage() {
                           <button
                             type="button"
                             onClick={() => {
-                              setEditingTask(tarea);
+                              setEditingTask({
+                                ...tarea,
+                                fecha_inicio_real: tarea.fecha_inicio_real || "",
+                                fecha_fin_real: tarea.fecha_fin_real || "",
+                              });
                               setShowEditModal(true);
                             }}
                             title="Editar tarea"
@@ -2141,12 +2147,12 @@ export default function ProjectDetailPage() {
                       marginBottom: "6px",
                     }}
                   >
-                    Fecha inicio
+                    Fecha inicio real
                   </label>
                   <input
                     type="date"
-                    value={editingTask.fecha_inicio || ""}
-                    onChange={(e) => setEditingTask({ ...editingTask, fecha_inicio: e.target.value })}
+                    value={editingTask.fecha_inicio_real || ""}
+                    onChange={(e) => setEditingTask({ ...editingTask, fecha_inicio_real: e.target.value })}
                     style={{
                       width: "100%",
                       padding: "10px 12px",
@@ -2168,12 +2174,12 @@ export default function ProjectDetailPage() {
                       marginBottom: "6px",
                     }}
                   >
-                    Fecha fin
+                    Fecha fin real
                   </label>
                   <input
                     type="date"
-                    value={editingTask.fecha_fin || ""}
-                    onChange={(e) => setEditingTask({ ...editingTask, fecha_fin: e.target.value })}
+                    value={editingTask.fecha_fin_real || ""}
+                    onChange={(e) => setEditingTask({ ...editingTask, fecha_fin_real: e.target.value })}
                     style={{
                       width: "100%",
                       padding: "10px 12px",
