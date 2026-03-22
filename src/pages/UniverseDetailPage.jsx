@@ -2,6 +2,16 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../supabase";
 
+async function getMiPerfil() {
+  const { data, error } = await supabase.rpc("mi_perfil");
+
+  if (error) {
+    throw error;
+  }
+
+  return data?.[0] || null;
+}
+
 function formatDate(value) {
   if (!value) return "—";
 
@@ -365,63 +375,94 @@ export default function UniverseDetailPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let mounted = true;
+
     async function loadUniverseDetail() {
       setLoading(true);
       setError("");
 
-      const universeId = Number(id);
+      try {
+        const perfil = await getMiPerfil();
 
-      const [
-        { data: kpiData, error: kpiError },
-        { data: projectData, error: projectError },
-      ] = await Promise.all([
-        supabase
-          .from("v_kpis_universo")
-          .select("*")
-          .eq("id_universo", universeId)
-          .single(),
+        if (!mounted) return;
 
-        supabase
-          .from("v_proyectos_universo_detalle")
-          .select(`
-            id_proyecto,
-            id_universo,
-            titulo,
-            owner,
-            horizonte,
-            fecha_inicio,
-            fecha_fin,
-            fase,
-            situacion,
-            avance_pct,
-            impacto_estimado,
-            inversion_estimada
-          `)
-          .eq("id_universo", universeId)
-          .order("orden_horizonte", { ascending: true })
-          .order("fecha_inicio", { ascending: true })
-          .order("fecha_fin", { ascending: true }),
-      ]);
+        if (!perfil || !perfil.activo) {
+          navigate("/login", { replace: true });
+          return;
+        }
 
-      if (kpiError) {
-        setError(kpiError.message);
+        const universeId = Number(id);
+
+        if (
+          perfil.tipo_acceso === "universo" &&
+          perfil.id_universo !== universeId
+        ) {
+          navigate(`/universes/${perfil.id_universo}`, { replace: true });
+          return;
+        }
+
+        const [
+          { data: kpiData, error: kpiError },
+          { data: projectData, error: projectError },
+        ] = await Promise.all([
+          supabase
+            .from("v_kpis_universo")
+            .select("*")
+            .eq("id_universo", universeId)
+            .single(),
+
+          supabase
+            .from("v_proyectos_universo_detalle")
+            .select(`
+              id_proyecto,
+              id_universo,
+              titulo,
+              owner,
+              horizonte,
+              fecha_inicio,
+              fecha_fin,
+              fase,
+              situacion,
+              avance_pct,
+              impacto_estimado,
+              inversion_estimada
+            `)
+            .eq("id_universo", universeId)
+            .order("orden_horizonte", { ascending: true })
+            .order("fecha_inicio", { ascending: true })
+            .order("fecha_fin", { ascending: true }),
+        ]);
+
+        if (!mounted) return;
+
+        if (kpiError) {
+          setError(kpiError.message);
+          setLoading(false);
+          return;
+        }
+
+        if (projectError) {
+          setError(projectError.message);
+          setLoading(false);
+          return;
+        }
+
+        setKpis(kpiData);
+        setProjects(projectData || []);
         setLoading(false);
-        return;
-      }
-
-      if (projectError) {
-        setError(projectError.message);
+      } catch (err) {
+        if (!mounted) return;
+        setError(err.message || "No se pudo validar el acceso al universo");
         setLoading(false);
-        return;
       }
-
-      setKpis(kpiData);
-      setProjects(projectData || []);
-      setLoading(false);
     }
 
     loadUniverseDetail();
-  }, [id]);
+
+    return () => {
+      mounted = false;
+    };
+  }, [id, navigate]);
 
   if (loading) {
     return (
