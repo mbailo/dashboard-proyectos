@@ -699,12 +699,12 @@ async function handleDeleteTask(idTarea) {
             
               {/* Universo */}
               <span style={{ ...badgeStyle }}>
-                {proyecto?.id_universo || "-"}
+                Universo: {proyecto?.nombre_universo || "-"}
               </span>
             
               {/* Owner */}
               <span style={{ ...badgeStyle }}>
-                {proyecto?.owner || "-"}
+                Owner: {proyecto?.owner || "-"}
               </span>
             
               {/* Fase */}
@@ -714,7 +714,7 @@ async function handleDeleteTask(idTarea) {
                   ...getTaskPhaseBadgeStyle(proyecto?.fase),
                 }}
               >
-                {proyecto?.fase || "-"}
+                Fase: {proyecto?.fase || "-"}
               </span>
             
               {/* Estado (antes Situación) */}
@@ -724,12 +724,12 @@ async function handleDeleteTask(idTarea) {
                   ...getProjectStatusBadgeStyle(proyecto?.situacion),
                 }}
               >
-                {proyecto?.situacion || "-"}
+                Estado: {proyecto?.situacion || "-"}
               </span>
             
               {/* % Avance */}
               <span style={{ ...badgeStyle }}>
-               {proyecto.avance_pct ?? 0}%
+               Avance: {proyecto.avance_pct ?? 0}%
               </span>
             
             </div>
