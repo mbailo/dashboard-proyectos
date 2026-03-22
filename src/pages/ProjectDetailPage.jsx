@@ -1881,211 +1881,7 @@ export default function ProjectDetailPage() {
           )}
         </section>
 
-        <section style={tableCardStyle}>
-          <div style={tableHeaderStyle}>
-            <div>
-              <h3 style={tableTitleStyle}>Costes del proyecto</h3>
-              <p style={tableSubtitleStyle}>Tabla con el mismo lenguaje visual que en UniverseDetailPage.</p>
-            </div>
-
-            <button
-              type="button"
-              style={primaryButtonStyle}
-              onClick={() => {
-                setShowCostForm((prev) => !prev);
-                setCostErrorMsg("");
-              }}
-            >
-              {showCostForm ? "Cancelar" : "+ Nuevo coste"}
-            </button>
-          </div>
-
-          {showCostForm && (
-            <form
-              onSubmit={handleCreateCost}
-              style={{
-                border: "1px solid #e5e7eb",
-                borderRadius: "12px",
-                padding: "16px",
-                marginBottom: "20px",
-                background: "#f9fafb",
-              }}
-            >
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                  gap: "16px",
-                }}
-              >
-                <div style={{ gridColumn: "1 / -1" }}>
-                  <label style={labelStyle}>Título</label>
-                  <input
-                    type="text"
-                    name="titulo"
-                    value={costForm.titulo}
-                    onChange={handleCostFormChange}
-                    style={inputStyle}
-                    required
-                  />
-                </div>
-
-                <div style={{ gridColumn: "1 / -1" }}>
-                  <label style={labelStyle}>Descripción</label>
-                  <textarea
-                    name="descripcion"
-                    value={costForm.descripcion}
-                    onChange={handleCostFormChange}
-                    style={{
-                      ...inputStyle,
-                      minHeight: "90px",
-                      resize: "vertical",
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={labelStyle}>Tipo de coste</label>
-                  <select
-                    name="tipo_coste"
-                    value={costForm.tipo_coste}
-                    onChange={handleCostFormChange}
-                    style={inputStyle}
-                  >
-                    <option value="OpEx">OpEx</option>
-                    <option value="CapEx">CapEx</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={labelStyle}>Importe (€)</label>
-                  <input
-                    type="number"
-                    name="importe"
-                    value={costForm.importe}
-                    onChange={handleCostFormChange}
-                    style={inputStyle}
-                    step="0.01"
-                  />
-                </div>
-              </div>
-
-              {costErrorMsg && (
-                <div
-                  style={{
-                    marginTop: "16px",
-                    padding: "12px",
-                    borderRadius: "8px",
-                    background: "#fef2f2",
-                    border: "1px solid #fecaca",
-                    color: "#b91c1c",
-                    fontSize: "14px",
-                  }}
-                >
-                  {costErrorMsg}
-                </div>
-              )}
-
-              <div
-                style={{
-                  display: "flex",
-                  gap: "12px",
-                  justifyContent: "flex-end",
-                  marginTop: "16px",
-                }}
-              >
-                <button
-                  type="button"
-                  style={secondaryButtonStyle}
-                  onClick={() => {
-                    setShowCostForm(false);
-                    setCostErrorMsg("");
-                  }}
-                >
-                  Cancelar
-                </button>
-
-                <button type="submit" style={primaryButtonStyle} disabled={savingCost}>
-                  {savingCost ? "Guardando..." : "Guardar coste"}
-                </button>
-              </div>
-            </form>
-          )}
-
-          {costes.length === 0 ? (
-            <p style={{ marginBottom: 0, color: "#6b7280" }}>Este proyecto todavía no tiene costes.</p>
-          ) : (
-            <div style={tableWrapperStyle}>
-              <table style={tableStyle}>
-                <thead>
-                  <tr>
-                    <th style={{ ...thStyle, width: "100px" }}>Id Coste</th>
-                    <th style={{ ...thStyle, width: "180px" }}>Título</th>
-                    <th style={{ ...thStyle, width: "500px" }}>Descripción</th>
-                    <th style={{ ...thStyle, width: "100px" }}>Tipo</th>
-                    <th style={{ ...thStyle, width: "100px" }}>Importe</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {costes.map((coste) => (
-                    <tr key={coste.id_coste}>
-                      <td style={{ ...tdStyle, width: "100px", whiteSpace: "nowrap" }}>{coste.id_coste}</td>
-                      <td
-                        style={{
-                          ...tdStyle,
-                          width: "180px",
-                          maxWidth: "180px",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          fontWeight: 700,
-                          color: "#0f172a",
-                        }}
-                        title={coste.titulo || ""}
-                      >
-                        {coste.titulo || "-"}
-                      </td>
-                      <td
-                        style={{
-                          ...tdStyle,
-                          width: "500px",
-                          maxWidth: "500px",
-                          whiteSpace: "normal",
-                          wordBreak: "break-word",
-                          overflowWrap: "anywhere",
-                        }}
-                      >
-                        {coste.descripcion || "-"}
-                      </td>
-                      <td
-                        style={{
-                          ...tdStyle,
-                          width: "100px",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {coste.tipo_coste || "-"}
-                      </td>
-                      <td
-                        style={{
-                          ...tdStyle,
-                          width: "100px",
-                          whiteSpace: "nowrap",
-                          textAlign: "right",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {formatCurrency(coste.importe)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-
-{/* ===== MODAL AÑADIR IMPACTO ===== */}
+{/* ===== BLOQUE DE IMPACTO Y MODAL AÑADIR IMPACTO ===== */}
         
         <section style={tableCardStyle}>
           <div style={tableHeaderStyle}>
@@ -2285,6 +2081,212 @@ export default function ProjectDetailPage() {
                         }}
                       >
                         {formatCurrency(impacto.importe)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+{/* ===== BLOQUE DE COSTES Y MODAL AÑADIR COSTE ===== */}        
+        
+        <section style={tableCardStyle}>
+          <div style={tableHeaderStyle}>
+            <div>
+              <h3 style={tableTitleStyle}>Costes del proyecto</h3>
+              <p style={tableSubtitleStyle}>Tabla con el mismo lenguaje visual que en UniverseDetailPage.</p>
+            </div>
+
+            <button
+              type="button"
+              style={primaryButtonStyle}
+              onClick={() => {
+                setShowCostForm((prev) => !prev);
+                setCostErrorMsg("");
+              }}
+            >
+              {showCostForm ? "Cancelar" : "+ Nuevo coste"}
+            </button>
+          </div>
+
+          {showCostForm && (
+            <form
+              onSubmit={handleCreateCost}
+              style={{
+                border: "1px solid #e5e7eb",
+                borderRadius: "12px",
+                padding: "16px",
+                marginBottom: "20px",
+                background: "#f9fafb",
+              }}
+            >
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: "16px",
+                }}
+              >
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={labelStyle}>Título</label>
+                  <input
+                    type="text"
+                    name="titulo"
+                    value={costForm.titulo}
+                    onChange={handleCostFormChange}
+                    style={inputStyle}
+                    required
+                  />
+                </div>
+
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={labelStyle}>Descripción</label>
+                  <textarea
+                    name="descripcion"
+                    value={costForm.descripcion}
+                    onChange={handleCostFormChange}
+                    style={{
+                      ...inputStyle,
+                      minHeight: "90px",
+                      resize: "vertical",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Tipo de coste</label>
+                  <select
+                    name="tipo_coste"
+                    value={costForm.tipo_coste}
+                    onChange={handleCostFormChange}
+                    style={inputStyle}
+                  >
+                    <option value="OpEx">OpEx</option>
+                    <option value="CapEx">CapEx</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Importe (€)</label>
+                  <input
+                    type="number"
+                    name="importe"
+                    value={costForm.importe}
+                    onChange={handleCostFormChange}
+                    style={inputStyle}
+                    step="0.01"
+                  />
+                </div>
+              </div>
+
+              {costErrorMsg && (
+                <div
+                  style={{
+                    marginTop: "16px",
+                    padding: "12px",
+                    borderRadius: "8px",
+                    background: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    color: "#b91c1c",
+                    fontSize: "14px",
+                  }}
+                >
+                  {costErrorMsg}
+                </div>
+              )}
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  justifyContent: "flex-end",
+                  marginTop: "16px",
+                }}
+              >
+                <button
+                  type="button"
+                  style={secondaryButtonStyle}
+                  onClick={() => {
+                    setShowCostForm(false);
+                    setCostErrorMsg("");
+                  }}
+                >
+                  Cancelar
+                </button>
+
+                <button type="submit" style={primaryButtonStyle} disabled={savingCost}>
+                  {savingCost ? "Guardando..." : "Guardar coste"}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {costes.length === 0 ? (
+            <p style={{ marginBottom: 0, color: "#6b7280" }}>Este proyecto todavía no tiene costes.</p>
+          ) : (
+            <div style={tableWrapperStyle}>
+              <table style={tableStyle}>
+                <thead>
+                  <tr>
+                    <th style={{ ...thStyle, width: "100px" }}>Id Coste</th>
+                    <th style={{ ...thStyle, width: "180px" }}>Título</th>
+                    <th style={{ ...thStyle, width: "500px" }}>Descripción</th>
+                    <th style={{ ...thStyle, width: "100px" }}>Tipo</th>
+                    <th style={{ ...thStyle, width: "100px" }}>Importe</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {costes.map((coste) => (
+                    <tr key={coste.id_coste}>
+                      <td style={{ ...tdStyle, width: "100px", whiteSpace: "nowrap" }}>{coste.id_coste}</td>
+                      <td
+                        style={{
+                          ...tdStyle,
+                          width: "180px",
+                          maxWidth: "180px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          fontWeight: 700,
+                          color: "#0f172a",
+                        }}
+                        title={coste.titulo || ""}
+                      >
+                        {coste.titulo || "-"}
+                      </td>
+                      <td
+                        style={{
+                          ...tdStyle,
+                          width: "500px",
+                          maxWidth: "500px",
+                          whiteSpace: "normal",
+                          wordBreak: "break-word",
+                          overflowWrap: "anywhere",
+                        }}
+                      >
+                        {coste.descripcion || "-"}
+                      </td>
+                      <td
+                        style={{
+                          ...tdStyle,
+                          width: "100px",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {coste.tipo_coste || "-"}
+                      </td>
+                      <td
+                        style={{
+                          ...tdStyle,
+                          width: "100px",
+                          whiteSpace: "nowrap",
+                          textAlign: "right",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {formatCurrency(coste.importe)}
                       </td>
                     </tr>
                   ))}
