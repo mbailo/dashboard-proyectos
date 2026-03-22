@@ -2,6 +2,16 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 import { useNavigate } from "react-router-dom";
 
+async function getMiPerfil() {
+  const { data, error } = await supabase.rpc("mi_perfil");
+
+  if (error) {
+    throw error;
+  }
+
+  return data?.[0] || null;
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
 
@@ -14,15 +24,40 @@ export default function LoginPage() {
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getSession().then(({ data }) => {
+    async function checkExistingSession() {
+      const { data } = await supabase.auth.getSession();
+
       if (!mounted) return;
 
-      if (data.session) {
-        navigate("/", { replace: true });
-      } else {
+      if (!data.session) {
+        setCheckingSession(false);
+        return;
+      }
+
+      try {
+        const perfil = await getMiPerfil();
+
+        if (!mounted) return;
+
+        if (perfil?.tipo_acceso === "global") {
+          navigate("/", { replace: true });
+          return;
+        }
+
+        if (perfil?.tipo_acceso === "universo" && perfil?.id_universo) {
+          navigate(`/universes/${perfil.id_universo}`, { replace: true });
+          return;
+        }
+
+        setErrorMsg("Tu usuario no tiene un perfil válido.");
+        setCheckingSession(false);
+      } catch (error) {
+        setErrorMsg("No se ha podido cargar el perfil del usuario.");
         setCheckingSession(false);
       }
-    });
+    }
+
+    checkExistingSession();
 
     return () => {
       mounted = false;
@@ -39,14 +74,32 @@ export default function LoginPage() {
       password,
     });
 
-    setLoading(false);
-
     if (error) {
+      setLoading(false);
       setErrorMsg("Email o contraseña incorrectos.");
       return;
     }
 
-    navigate("/", { replace: true });
+    try {
+      const perfil = await getMiPerfil();
+
+      setLoading(false);
+
+      if (perfil?.tipo_acceso === "global") {
+        navigate("/", { replace: true });
+        return;
+      }
+
+      if (perfil?.tipo_acceso === "universo" && perfil?.id_universo) {
+        navigate(`/universes/${perfil.id_universo}`, { replace: true });
+        return;
+      }
+
+      setErrorMsg("Tu usuario no tiene un perfil válido.");
+    } catch (err) {
+      setLoading(false);
+      setErrorMsg("No se ha podido cargar el perfil del usuario.");
+    }
   };
 
   if (checkingSession) {
