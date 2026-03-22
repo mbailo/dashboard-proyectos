@@ -495,8 +495,8 @@ const tdDescriptionStyle = {
 
 const tdOwnerStyle = {
   ...tdStyle,
-  width: "140px",
-  maxWidth: "140px",
+  width: "120px",
+  maxWidth: "120px",
   whiteSpace: "nowrap",
   overflow: "hidden",
   textOverflow: "ellipsis",
@@ -506,25 +506,25 @@ const tdOwnerStyle = {
 
 const tdDateStyle = {
   ...tdStyle,
-  width: "110px",
+  width: "95px",
   whiteSpace: "nowrap",
 };
 
 const tdBadgeStyle = {
   ...tdStyle,
-  width: "140px",
+  width: "125px",
   whiteSpace: "nowrap",
 };
 
 const tdDelayStyle = {
   ...tdStyle,
-  width: "90px",
+  width: "75px",
   whiteSpace: "nowrap",
 };
 
 const tdActionsStyle = {
   ...tdStyle,
-  width: "110px",
+  width: "100px",
   whiteSpace: "nowrap",
 };
 
@@ -1612,7 +1612,9 @@ export default function ProjectDetailPage() {
               </div>
             </form>
           )}
-
+          
+          {/*  ===== HEADER DE LA TABLA DE TAREAS ===== */}
+          
           {tareas.length === 0 ? (
             <p style={{ marginBottom: 0, color: "#6b7280" }}>Este proyecto todavía no tiene tareas.</p>
           ) : (
@@ -1622,13 +1624,14 @@ export default function ProjectDetailPage() {
                   <tr>
                     <th style={{ ...thStyle, width: "180px" }}>Título</th>
                     <th style={{ ...thStyle, width: "320px" }}>Descripción</th>
-                    <th style={{ ...thStyle, width: "140px" }}>Owner</th>
-                    <th style={{ ...thStyle, width: "110px" }}>Inicio</th>
-                    <th style={{ ...thStyle, width: "110px" }}>Fin</th>
-                    <th style={{ ...thStyle, width: "140px" }}>Fase</th>
-                    <th style={{ ...thStyle, width: "140px" }}>Estado</th>
-                    <th style={{ ...thStyle, width: "90px" }}>Retraso</th>
-                    <th style={{ ...thStyle, width: "110px" }}>Acciones</th>
+                    <th style={{ ...thStyle, width: "120px" }}>Owner</th>
+                    <th style={{ ...thStyle, width: "95px" }}>Inicio</th>
+                    <th style={{ ...thStyle, width: "95px" }}>Fin</th>
+                    <th style={{ ...thStyle, width: "95px" }}>Fin real</th>
+                    <th style={{ ...thStyle, width: "125px" }}>Fase</th>
+                    <th style={{ ...thStyle, width: "125px" }}>Estado</th>
+                    <th style={{ ...thStyle, width: "75px" }}>Retraso</th>
+                    <th style={{ ...thStyle, width: "100px" }}>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1643,6 +1646,7 @@ export default function ProjectDetailPage() {
                       </td>
                       <td style={tdDateStyle}>{formatDate(tarea.fecha_inicio)}</td>
                       <td style={tdDateStyle}>{formatDate(tarea.fecha_fin)}</td>
+                      <td style={tdDateStyle}>{formatDate(tarea.fecha_fin_real)}</td>
                       <td style={tdBadgeStyle}>
                         <span
                           style={{
