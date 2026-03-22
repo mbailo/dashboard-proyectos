@@ -130,6 +130,31 @@ function getTaskStatusBadgeStyle(estado) {
   }
 }
 
+function getProjectStatusBadgeStyle(estado) {
+  switch (estado) {
+    case "En tiempo":
+      return {
+        background: "#dcfce7",
+        color: "#166534",
+      };
+    case "Riesgo de retraso":
+      return {
+        background: "#fef3c7",
+        color: "#92400e",
+      };
+    case "Retrasado":
+      return {
+        background: "#fee2e2",
+        color: "#991b1b",
+      };
+    default:
+      return {
+        background: "#e5e7eb",
+        color: "#374151",
+      };
+  }
+}
+
 /* ESTILOS BASE thStyle, Badges, etc. */
 
 const thStyle = {
@@ -349,7 +374,7 @@ export default function ProjectDetailPage() {
 
   async function loadProject(projectId) {
     const { data, error } = await supabase
-      .from("proyectos")
+      .from("v_proyectos_universo_detalle")
       .select(`
         id_proyecto,
         id_universo,
@@ -363,20 +388,19 @@ export default function ProjectDetailPage() {
         situacion,
         fecha_inicio,
         fecha_fin,
-        universos_negocio (
-          nombre
-        )
+        avance_pct,
+        nombre_universo
       `)
       .eq("id_proyecto", projectId)
       .single();
-
+  
     if (error) {
       throw new Error(error.message || "No se pudo cargar el proyecto");
     }
-
+  
     return data;
   }
-
+  
   async function loadTasks(projectId) {
     const { data, error } = await supabase
       .from("tareas")
@@ -621,7 +645,7 @@ async function handleDeleteTask(idTarea) {
     return <p>No se ha encontrado el proyecto.</p>;
   }
 
-  const nombreUniverso = proyecto.universos_negocio?.nombre || "-";
+  const nombreUniverso = proyecto.nombre_universo || "-";
 
 /* RETURN */
   
@@ -670,55 +694,46 @@ async function handleDeleteTask(idTarea) {
                 {proyecto.titulo}
               </h2>
             </div>
-        
-            <div
-              style={{
-                display: "flex",
-                gap: "8px",
-                flexWrap: "wrap",
-                justifyContent: "flex-end",
-              }}
-            >
+
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            
+              {/* Universo */}
+              <span style={{ ...badgeStyle }}>
+                {proyecto?.id_universo || "-"}
+              </span>
+            
+              {/* Owner */}
+              <span style={{ ...badgeStyle }}>
+                {proyecto?.owner || "-"}
+              </span>
+            
+              {/* Fase */}
               <span
                 style={{
-                  padding: "6px 10px",
-                  borderRadius: "999px",
-                  background: "#eff6ff",
-                  color: "#1d4ed8",
-                  fontSize: "13px",
-                  fontWeight: 600,
+                  ...badgeStyle,
+                  ...getTaskPhaseBadgeStyle(proyecto?.fase),
                 }}
               >
-                Owner: {proyecto.owner || "-"}
+                {proyecto?.fase || "-"}
               </span>
-        
+            
+              {/* Estado (antes Situación) */}
               <span
                 style={{
-                  padding: "6px 10px",
-                  borderRadius: "999px",
-                  background: "#f3f4f6",
-                  color: "#374151",
-                  fontSize: "13px",
-                  fontWeight: 600,
+                  ...badgeStyle,
+                  ...getProjectStatusBadgeStyle(proyecto?.situacion),
                 }}
               >
-                Fase: {proyecto.fase || "-"}
+                {proyecto?.situacion || "-"}
               </span>
-        
-              <span
-                style={{
-                  padding: "6px 10px",
-                  borderRadius: "999px",
-                  background: "#f9fafb",
-                  color: "#374151",
-                  border: "1px solid #e5e7eb",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                }}
-              >
-                Situación: {proyecto.situacion || "-"}
+            
+              {/* % Avance */}
+              <span style={{ ...badgeStyle }}>
+               {proyecto.avance_pct ?? 0}%
               </span>
+            
             </div>
+            
           </div>
         
           <div
