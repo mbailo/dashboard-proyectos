@@ -1957,7 +1957,7 @@ export default function ProjectDetailPage() {
                     <option value="OpEx">OpEx</option>
                     <option value="Personal">Personal</option>
                     <option value="Ingresos">Ingresos</option>
-                    <option value="Alquiler">Ingresos</option>                    
+                    <option value="Alquiler">Alquiler</option>                    
                   </select>
                 </div>
         
