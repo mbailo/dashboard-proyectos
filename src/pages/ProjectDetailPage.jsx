@@ -1,9 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Settings, Trash } from "lucide-react";
 import { supabase } from "../supabase";
-
-/* FUNCIONES AUXILIARES */
 
 function formatCurrency(value) {
   if (value === null || value === undefined) return "-";
@@ -16,7 +14,11 @@ function formatCurrency(value) {
 
 function formatDate(value) {
   if (!value) return "-";
-  return new Intl.DateTimeFormat("es-ES").format(new Date(value));
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat("es-ES").format(date);
 }
 
 function formatTaskDelay(fechaFin, situacion) {
@@ -29,7 +31,6 @@ function formatTaskDelay(fechaFin, situacion) {
   end.setHours(0, 0, 0, 0);
 
   const diffMs = today - end;
-
   if (diffMs <= 0) return "-";
 
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -38,32 +39,66 @@ function formatTaskDelay(fechaFin, situacion) {
   return `-${diffWeeks} wks`;
 }
 
-function InfoCard({ label, value }) {
-  return (
-    <div
-      style={{
-        background: "#ffffff",
-        border: "1px solid #e5e7eb",
-        borderRadius: "12px",
-        padding: "16px",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "12px",
-          color: "#6b7280",
-          marginBottom: "6px",
-          textTransform: "uppercase",
-          letterSpacing: "0.04em",
-        }}
-      >
-        {label}
-      </div>
-      <div style={{ fontSize: "16px", fontWeight: 600, color: "#111827" }}>
-        {value || "-"}
-      </div>
-    </div>
-  );
+function parseDate(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function startOfDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function startOfMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function endOfMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+}
+
+function diffDays(start, end) {
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.round((startOfDay(end) - startOfDay(start)) / msPerDay);
+}
+
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function normalizeSituation(situacion) {
+  const value = (situacion || "").trim();
+
+  if (value === "En tiempo" || value === "En plazo") return "En tiempo";
+  if (value === "Riesgo de retraso" || value === "En riesgo") return "Riesgo de retraso";
+  if (value === "Retrasado") return "Retrasado";
+  return value || "Sin informar";
+}
+
+function getSituationColor(situacion) {
+  const normalized = normalizeSituation(situacion);
+  if (normalized === "En tiempo") return "#16a34a";
+  if (normalized === "Riesgo de retraso") return "#f59e0b";
+  if (normalized === "Retrasado") return "#dc2626";
+  return "#94a3b8";
+}
+
+function getSituationBg(situacion) {
+  const normalized = normalizeSituation(situacion);
+  if (normalized === "En tiempo") return "#dcfce7";
+  if (normalized === "Riesgo de retraso") return "#fef3c7";
+  if (normalized === "Retrasado") return "#fee2e2";
+  return "#e2e8f0";
+}
+
+function getSituationBadgeStyle(situacion) {
+  return {
+    background: getSituationBg(situacion),
+    color: getSituationColor(situacion),
+    border: `1px solid ${getSituationBg(situacion) === "#e2e8f0" ? "#cbd5e1" : getSituationBg(situacion)}`,
+  };
 }
 
 function getTaskPhaseBadgeStyle(fase) {
@@ -101,8 +136,43 @@ function getTaskPhaseBadgeStyle(fase) {
   }
 }
 
+function getProjectPhaseBadgeStyle(fase) {
+  switch (fase) {
+    case "En Definición":
+      return {
+        background: "#f1f5f9",
+        color: "#334155",
+        border: "1px solid #cbd5e1",
+      };
+    case "En Planificación":
+      return {
+        background: "#ede9fe",
+        color: "#6d28d9",
+        border: "1px solid #ddd6fe",
+      };
+    case "En Curso":
+      return {
+        background: "#dbeafe",
+        color: "#1d4ed8",
+        border: "1px solid #bfdbfe",
+      };
+    case "Finalizado":
+      return {
+        background: "#dcfce7",
+        color: "#166534",
+        border: "1px solid #bbf7d0",
+      };
+    default:
+      return {
+        background: "#f8fafc",
+        color: "#334155",
+        border: "1px solid #e2e8f0",
+      };
+  }
+}
+
 function getTaskStatusBadgeStyle(estado) {
-  switch (estado) {
+  switch (normalizeSituation(estado)) {
     case "En tiempo":
       return {
         background: "#ecfdf5",
@@ -131,31 +201,250 @@ function getTaskStatusBadgeStyle(estado) {
 }
 
 function getProjectStatusBadgeStyle(estado) {
-  switch (estado) {
+  switch (normalizeSituation(estado)) {
     case "En tiempo":
       return {
         background: "#dcfce7",
         color: "#166534",
+        border: "1px solid #bbf7d0",
       };
     case "Riesgo de retraso":
       return {
         background: "#fef3c7",
         color: "#92400e",
+        border: "1px solid #fde68a",
       };
     case "Retrasado":
       return {
         background: "#fee2e2",
         color: "#991b1b",
+        border: "1px solid #fecaca",
       };
     default:
       return {
         background: "#e5e7eb",
         color: "#374151",
+        border: "1px solid #d1d5db",
       };
   }
 }
 
-/* ESTILOS BASE thStyle, Badges, etc. */
+function buildTaskTimeline(tasks, project) {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const fixedStart = new Date(currentYear, 0, 1);
+  const fixedEnd = new Date(currentYear, 11, 31);
+
+  const taskStarts = tasks.map((t) => parseDate(t.fecha_inicio)).filter(Boolean);
+  const taskEnds = tasks.map((t) => parseDate(t.fecha_fin)).filter(Boolean);
+  const projectStart = parseDate(project?.fecha_inicio);
+  const projectEnd = parseDate(project?.fecha_fin);
+
+  const allStarts = [...taskStarts, ...(projectStart ? [projectStart] : [])];
+  const allEnds = [...taskEnds, ...(projectEnd ? [projectEnd] : [])];
+
+  const minStart = allStarts.length
+    ? new Date(Math.min(...allStarts.map((d) => d.getTime())))
+    : fixedStart;
+  const maxEnd = allEnds.length
+    ? new Date(Math.max(...allEnds.map((d) => d.getTime())))
+    : fixedEnd;
+
+  const rawStart = minStart < fixedStart ? minStart : fixedStart;
+  const rawEnd = maxEnd > fixedEnd ? maxEnd : fixedEnd;
+
+  const start = startOfMonth(rawStart);
+  const end = endOfMonth(rawEnd);
+  const totalDays = Math.max(1, diffDays(start, end) + 1);
+
+  const months = [];
+  let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+
+  while (cursor <= end) {
+    const monthStart = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+    const monthEnd = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0);
+
+    months.push({
+      key: `${cursor.getFullYear()}-${cursor.getMonth()}`,
+      label:
+        cursor
+          .toLocaleDateString("es-ES", { month: "short" })
+          .replace(".", "") +
+        "'" +
+        String(cursor.getFullYear()).slice(-2),
+      leftPct: (diffDays(start, monthStart) / totalDays) * 100,
+      widthPct: ((diffDays(monthStart, monthEnd) + 1) / totalDays) * 100,
+    });
+
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+  }
+
+  const weekStart = addDays(today, -((today.getDay() + 6) % 7));
+  const currentLinePct =
+    today < start ? 0 : today > end ? 100 : (diffDays(start, weekStart) / totalDays) * 100;
+
+  return { start, end, totalDays, months, currentLinePct };
+}
+
+function TaskGanttChart({ tasks, project }) {
+  const timeline = useMemo(() => buildTaskTimeline(tasks, project), [tasks, project]);
+
+  const getBarLabel = (estado) => {
+    if (estado === "No Iniciada") return "NI";
+    if (estado === "Planificada") return "PL";
+    if (estado === "En curso") return "EC";
+    if (estado === "Finalizada") return "FI";
+    return "TA";
+  };
+
+  return (
+    <section style={styles.ganttCard}>
+      <div style={styles.ganttHeader}>
+        <div>
+          <h2 style={styles.tableTitle}>Cronograma de tareas del proyecto</h2>
+          <p style={styles.tableSubtitle}>
+            Vista sencilla de las tareas del proyecto. El cronograma cubre como mínimo el año actual y marca la semana actual.
+          </p>
+        </div>
+
+        <div style={styles.ganttLegend}>
+          <div style={styles.legendItem}>
+            <span style={{ ...styles.legendSwatch, background: "#dbeafe", border: "1px solid #93c5fd" }} />
+            <span>Barra tarea</span>
+          </div>
+          <div style={styles.legendItem}>
+            <span style={{ ...styles.legendLine, background: "#0f172a" }} />
+            <span>Semana actual</span>
+          </div>
+          <div style={styles.legendItem}>
+            <span style={{ ...styles.trafficDot, background: getSituationColor("En tiempo") }} />
+            <span>En tiempo</span>
+          </div>
+          <div style={styles.legendItem}>
+            <span style={{ ...styles.trafficDot, background: getSituationColor("Riesgo de retraso") }} />
+            <span>Riesgo de retraso</span>
+          </div>
+          <div style={styles.legendItem}>
+            <span style={{ ...styles.trafficDot, background: getSituationColor("Retrasado") }} />
+            <span>Retrasado</span>
+          </div>
+        </div>
+      </div>
+
+      {tasks.length === 0 ? (
+        <div style={styles.emptyGantt}>No hay tareas para mostrar en el cronograma.</div>
+      ) : (
+        <div style={styles.ganttScroll}>
+          <div style={styles.ganttBoard}>
+            <div style={styles.ganttTopRow}>
+              <div style={styles.ganttProjectHeader}>Tarea</div>
+              <div style={styles.ganttTimelineHeader}>
+                {timeline.months.map((month) => (
+                  <div
+                    key={month.key}
+                    style={{
+                      ...styles.monthHeader,
+                      left: `${month.leftPct}%`,
+                      width: `${month.widthPct}%`,
+                    }}
+                  >
+                    {month.label}
+                  </div>
+                ))}
+                <div
+                  style={{
+                    ...styles.currentWeekLine,
+                    left: `${timeline.currentLinePct}%`,
+                  }}
+                />
+                <div
+                  style={{
+                    ...styles.currentWeekTag,
+                    left: `min(${Math.max(timeline.currentLinePct, 1)}%, calc(100% - 84px))`,
+                  }}
+                >
+                  Semana actual
+                </div>
+              </div>
+              <div style={styles.ganttStatusHeader}>Estado</div>
+            </div>
+
+            {tasks.map((task) => {
+              const start = parseDate(task.fecha_inicio);
+              const end = parseDate(task.fecha_fin);
+              const trafficLabel = normalizeSituation(task.situacion);
+
+              let leftPct = 0;
+              let widthPct = 0;
+
+              if (start && end) {
+                const boundedStart = start < timeline.start ? timeline.start : start;
+                const boundedEnd = end > timeline.end ? timeline.end : end;
+                leftPct = (diffDays(timeline.start, boundedStart) / timeline.totalDays) * 100;
+                widthPct = ((diffDays(boundedStart, boundedEnd) + 1) / timeline.totalDays) * 100;
+              }
+
+              return (
+                <div key={task.id_tarea} style={styles.ganttRow}>
+                  <div style={styles.ganttProjectCell}>
+                    <div style={styles.ganttProjectTitle}>{task.titulo || "-"}</div>
+                    <div style={styles.ganttProjectMeta}>
+                      {(task.owner || "Sin owner") + " · " + formatDate(task.fecha_inicio) + " — " + formatDate(task.fecha_fin)}
+                    </div>
+                  </div>
+
+                  <div style={styles.ganttTimelineCell}>
+                    {timeline.months.map((month) => (
+                      <div
+                        key={`${task.id_tarea}-${month.key}`}
+                        style={{
+                          ...styles.monthBand,
+                          left: `${month.leftPct}%`,
+                          width: `${month.widthPct}%`,
+                        }}
+                      />
+                    ))}
+
+                    <div
+                      style={{
+                        ...styles.currentWeekLine,
+                        left: `${timeline.currentLinePct}%`,
+                      }}
+                    />
+
+                    {start && end ? (
+                      <div
+                        style={{
+                          ...styles.ganttBar,
+                          left: `${Math.max(0, leftPct)}%`,
+                          width: `${Math.max(widthPct, 1.4)}%`,
+                        }}
+                        title={`${task.titulo} · ${formatDate(task.fecha_inicio)} → ${formatDate(task.fecha_fin)}`}
+                      >
+                        <span style={styles.ganttBarLabel}>{getBarLabel(task.estado_tarea)}</span>
+                      </div>
+                    ) : (
+                      <div style={styles.ganttNoDates}>Sin fechas</div>
+                    )}
+                  </div>
+
+                  <div style={styles.ganttStatusCell} title={trafficLabel}>
+                    <span
+                      style={{
+                        ...styles.trafficDotLarge,
+                        background: getSituationColor(task.situacion),
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
 
 const thStyle = {
   position: "sticky",
@@ -336,7 +625,264 @@ const tableStyle = {
   tableLayout: "fixed",
 };
 
-/* EMPIEZA useState() */
+const styles = {
+  page: {
+    minHeight: "100vh",
+    padding: "14px 8px 24px",
+    background: "linear-gradient(180deg, #f8fbff 0%, #f4f7fb 38%, #eef4f8 100%)",
+    boxSizing: "border-box",
+  },
+  container: {
+    maxWidth: 1800,
+    width: "100%",
+    margin: "0 auto",
+    display: "grid",
+    gap: 14,
+  },
+  summaryCard: {
+    width: "100%",
+    margin: "0 auto",
+    boxSizing: "border-box",
+    background: "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(246,250,255,0.98) 100%)",
+    border: "1px solid #dbe4ee",
+    borderRadius: 20,
+    padding: 20,
+    boxShadow: "0 10px 22px rgba(15, 23, 42, 0.06)",
+  },
+  tableTitle: {
+    margin: 0,
+    fontSize: 22,
+    color: "#0f172a",
+  },
+  tableSubtitle: {
+    margin: "4px 0 0 0",
+    fontSize: 13,
+    color: "#64748b",
+  },
+  ganttCard: {
+    width: "100%",
+    margin: "0 auto",
+    boxSizing: "border-box",
+    background: "rgba(255,255,255,0.92)",
+    border: "1px solid #dbe4ee",
+    borderRadius: 20,
+    padding: 18,
+    boxShadow: "0 14px 36px rgba(15, 23, 42, 0.08)",
+    backdropFilter: "blur(8px)",
+  },
+  ganttHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 16,
+    marginBottom: 16,
+    flexWrap: "wrap",
+  },
+  ganttLegend: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 10,
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  legendItem: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    fontSize: 12,
+    color: "#64748b",
+    whiteSpace: "nowrap",
+  },
+  legendSwatch: {
+    width: 18,
+    height: 10,
+    borderRadius: 999,
+    display: "inline-block",
+  },
+  legendLine: {
+    width: 18,
+    height: 2,
+    borderRadius: 999,
+    display: "inline-block",
+  },
+  ganttScroll: {
+    width: "100%",
+    overflowX: "auto",
+  },
+  ganttBoard: {
+    minWidth: 1220,
+    margin: "0 auto",
+    border: "1px solid #e2e8f0",
+    borderRadius: 16,
+    overflow: "hidden",
+    background: "#ffffff",
+  },
+  ganttTopRow: {
+    display: "grid",
+    gridTemplateColumns: "280px 1fr 72px",
+    borderBottom: "1px solid #e2e8f0",
+    background: "#f8fafc",
+  },
+  ganttProjectHeader: {
+    padding: "10px 12px",
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
+    color: "#475569",
+    borderRight: "1px solid #e2e8f0",
+  },
+  ganttTimelineHeader: {
+    position: "relative",
+    height: 54,
+    borderRight: "1px solid #e2e8f0",
+  },
+  ganttStatusHeader: {
+    padding: "10px 12px",
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
+    color: "#475569",
+    textAlign: "center",
+  },
+  monthHeader: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRight: "1px solid #e2e8f0",
+    fontSize: 11,
+    fontWeight: 700,
+    color: "#64748b",
+    textTransform: "capitalize",
+    background: "rgba(248,250,252,0.65)",
+  },
+  monthBand: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    borderRight: "1px solid #f1f5f9",
+    background: "linear-gradient(180deg, rgba(248,250,252,0.55) 0%, rgba(255,255,255,0.35) 100%)",
+  },
+  currentWeekLine: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 2,
+    marginLeft: -1,
+    background: "#0f172a",
+    opacity: 0.8,
+    zIndex: 4,
+  },
+  currentWeekTag: {
+    position: "absolute",
+    top: 6,
+    transform: "translateX(-50%)",
+    padding: "4px 8px",
+    borderRadius: 999,
+    background: "#0f172a",
+    color: "#ffffff",
+    fontSize: 10,
+    fontWeight: 700,
+    whiteSpace: "nowrap",
+    zIndex: 5,
+  },
+  ganttRow: {
+    display: "grid",
+    gridTemplateColumns: "280px 1fr 72px",
+    minHeight: 52,
+    borderBottom: "1px solid #edf2f7",
+  },
+  ganttProjectCell: {
+    padding: "10px 14px",
+    borderRight: "1px solid #edf2f7",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    gap: 4,
+  },
+  ganttProjectTitle: {
+    fontSize: 13,
+    fontWeight: 700,
+    color: "#0f172a",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  ganttProjectMeta: {
+    fontSize: 11,
+    color: "#64748b",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  ganttTimelineCell: {
+    position: "relative",
+    minHeight: 52,
+    borderRight: "1px solid #edf2f7",
+    overflow: "hidden",
+  },
+  ganttBar: {
+    position: "absolute",
+    top: "50%",
+    transform: "translateY(-50%)",
+    height: 16,
+    borderRadius: 999,
+    background: "linear-gradient(135deg, #93c5fd 0%, #3b82f6 100%)",
+    boxShadow: "0 5px 12px rgba(59,130,246,0.24)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    paddingRight: 6,
+    zIndex: 3,
+  },
+  ganttBarLabel: {
+    fontSize: 10,
+    fontWeight: 700,
+    color: "#ffffff",
+    letterSpacing: "0.02em",
+  },
+  ganttNoDates: {
+    position: "absolute",
+    inset: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 12,
+    color: "#94a3b8",
+    zIndex: 2,
+  },
+  ganttStatusCell: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  trafficDot: {
+    width: 10,
+    height: 10,
+    borderRadius: "50%",
+    display: "inline-block",
+    boxShadow: "0 0 0 3px rgba(15,23,42,0.04)",
+  },
+  trafficDotLarge: {
+    width: 14,
+    height: 14,
+    borderRadius: "50%",
+    display: "inline-block",
+    boxShadow: "0 0 0 4px rgba(15,23,42,0.05)",
+  },
+  emptyGantt: {
+    padding: 24,
+    textAlign: "center",
+    color: "#64748b",
+    border: "1px dashed #cbd5e1",
+    borderRadius: 14,
+    background: "#f8fafc",
+  },
+};
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
@@ -393,14 +939,14 @@ export default function ProjectDetailPage() {
       `)
       .eq("id_proyecto", projectId)
       .single();
-  
+
     if (error) {
       throw new Error(error.message || "No se pudo cargar el proyecto");
     }
-  
+
     return data;
   }
-  
+
   async function loadTasks(projectId) {
     const { data, error } = await supabase
       .from("tareas")
@@ -472,55 +1018,50 @@ export default function ProjectDetailPage() {
   }
 
   const handleUpdateTask = async () => {
-  if (!editingTask) return;
+    if (!editingTask) return;
 
-  const { error } = await supabase
-    .from("tareas")
-    .update({
-      titulo: editingTask.titulo,
-      descripcion: editingTask.descripcion,
-      owner: editingTask.owner,
-      estado_tarea: editingTask.estado_tarea,
-      situacion: editingTask.situacion,
-      fecha_inicio: editingTask.fecha_inicio || null,
-      fecha_fin: editingTask.fecha_fin || null,
-    })
-    .eq("id_tarea", editingTask.id_tarea);
-
-  if (error) {
-    console.error("Error al actualizar tarea:", error);
-    alert("Error al actualizar la tarea");
-    return;
-  }
-
-  await loadAll();
-  setShowEditModal(false);
-  setEditingTask(null);
-};
-
-async function handleDeleteTask(idTarea) {
-  const confirmed = window.confirm("¿Seguro que quieres eliminar esta tarea?");
-  if (!confirmed) return;
-
-  try {
     const { error } = await supabase
       .from("tareas")
-      .delete()
-      .eq("id_tarea", idTarea);
+      .update({
+        titulo: editingTask.titulo,
+        descripcion: editingTask.descripcion,
+        owner: editingTask.owner,
+        estado_tarea: editingTask.estado_tarea,
+        situacion: editingTask.situacion,
+        fecha_inicio: editingTask.fecha_inicio || null,
+        fecha_fin: editingTask.fecha_fin || null,
+      })
+      .eq("id_tarea", editingTask.id_tarea);
 
     if (error) {
-      throw error;
+      console.error("Error al actualizar tarea:", error);
+      alert("Error al actualizar la tarea");
+      return;
     }
 
     await loadAll();
-  } catch (err) {
-    console.error("Error al eliminar tarea:", err);
-    alert(err.message || "Error al eliminar la tarea");
+    setShowEditModal(false);
+    setEditingTask(null);
+  };
+
+  async function handleDeleteTask(idTarea) {
+    const confirmed = window.confirm("¿Seguro que quieres eliminar esta tarea?");
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase.from("tareas").delete().eq("id_tarea", idTarea);
+
+      if (error) {
+        throw error;
+      }
+
+      await loadAll();
+    } catch (err) {
+      console.error("Error al eliminar tarea:", err);
+      alert(err.message || "Error al eliminar la tarea");
+    }
   }
-}
-  
-/* EMPIEZA useEffect() */
-  
+
   useEffect(() => {
     loadAll();
   }, [id]);
@@ -647,20 +1188,10 @@ async function handleDeleteTask(idTarea) {
 
   const nombreUniverso = proyecto.nombre_universo || "-";
 
-/* RETURN */
-  
   return (
-    <div style={{ display: "grid", gap: "24px" }}>
-        <section
-          style={{
-            background: "#ffffff",
-            border: "1px solid #e5e7eb",
-            borderRadius: "16px",
-            padding: "20px",
-            display: "grid",
-            gap: "16px",
-          }}
-        >
+    <div style={styles.page}>
+      <div style={styles.container}>
+        <section style={styles.summaryCard}>
           <div
             style={{
               display: "flex",
@@ -682,7 +1213,7 @@ async function handleDeleteTask(idTarea) {
               >
                 {proyecto.id_proyecto} · {nombreUniverso}
               </div>
-        
+
               <h2
                 style={{
                   margin: 0,
@@ -695,52 +1226,45 @@ async function handleDeleteTask(idTarea) {
               </h2>
             </div>
 
-              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-            
-              {/* Universo */}
-              <span style={{ ...badgeStyle }}>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              <span style={{ ...badgeStyle, background: "#f8fafc", color: "#334155", border: "1px solid #e2e8f0" }}>
                 Universo: {proyecto?.nombre_universo || "-"}
               </span>
-            
-              {/* Owner */}
-              <span style={{ ...badgeStyle }}>
+
+              <span style={{ ...badgeStyle, background: "#f8fafc", color: "#334155", border: "1px solid #e2e8f0" }}>
                 Owner: {proyecto?.owner || "-"}
               </span>
-            
-              {/* Fase */}
+
               <span
                 style={{
                   ...badgeStyle,
-                  ...getTaskPhaseBadgeStyle(proyecto?.fase),
+                  ...getProjectPhaseBadgeStyle(proyecto?.fase),
                 }}
               >
                 Fase: {proyecto?.fase || "-"}
               </span>
-            
-              {/* Estado (antes Situación) */}
+
               <span
                 style={{
                   ...badgeStyle,
                   ...getProjectStatusBadgeStyle(proyecto?.situacion),
                 }}
               >
-                Estado: {proyecto?.situacion || "-"}
+                Estado: {normalizeSituation(proyecto?.situacion)}
               </span>
-            
-              {/* % Avance */}
-              <span style={{ ...badgeStyle }}>
-               Avance: {proyecto.avance_pct ?? 0}%
+
+              <span style={{ ...badgeStyle, background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe" }}>
+                Avance: {proyecto.avance_pct ?? 0}%
               </span>
-            
             </div>
-            
           </div>
-        
+
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
               gap: "12px",
+              marginTop: 16,
             }}
           >
             <div
@@ -766,7 +1290,7 @@ async function handleDeleteTask(idTarea) {
                 {formatCurrency(proyecto.inversion_estimada)}
               </div>
             </div>
-        
+
             <div
               style={{
                 background: "#f9fafb",
@@ -790,7 +1314,7 @@ async function handleDeleteTask(idTarea) {
                 {formatCurrency(proyecto.impacto_estimado)}
               </div>
             </div>
-        
+
             <div
               style={{
                 background: "#f9fafb",
@@ -814,7 +1338,7 @@ async function handleDeleteTask(idTarea) {
                 {formatDate(proyecto.fecha_inicio)}
               </div>
             </div>
-        
+
             <div
               style={{
                 background: "#f9fafb",
@@ -839,12 +1363,13 @@ async function handleDeleteTask(idTarea) {
               </div>
             </div>
           </div>
-        
+
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
               gap: "16px",
+              marginTop: 16,
             }}
           >
             <div
@@ -877,7 +1402,7 @@ async function handleDeleteTask(idTarea) {
                 {proyecto.descripcion || "Sin descripción"}
               </p>
             </div>
-        
+
             <div
               style={{
                 background: "#ffffff",
@@ -910,823 +1435,799 @@ async function handleDeleteTask(idTarea) {
             </div>
           </div>
         </section>
-      
+
+        <TaskGanttChart tasks={tareas} project={proyecto} />
+
         <section style={tableCardStyle}>
-        <div style={tableHeaderStyle}>
-          <div>
-            <h3 style={tableTitleStyle}>Tareas del proyecto</h3>
-            <p style={tableSubtitleStyle}>
-              Mismo contenido y badges, con el formato visual alineado con la tabla de detalle del universo.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            style={primaryButtonStyle}
-            onClick={() => {
-              setShowTaskForm((prev) => !prev);
-              setTaskErrorMsg("");
-            }}
-          >
-            {showTaskForm ? "Cancelar" : "+ Nueva tarea"}
-          </button>
-        </div>
-          
-        {showTaskForm && (
-          <form
-            onSubmit={handleCreateTask}
-            style={{
-              border: "1px solid #e5e7eb",
-              borderRadius: "12px",
-              padding: "16px",
-              marginBottom: "20px",
-              background: "#f9fafb",
-            }}
-          >
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: "16px",
-              }}
-            >
-              <div style={{ gridColumn: "1 / -1" }}>
-                <label style={labelStyle}>Título de la tarea</label>
-                <input
-                  type="text"
-                  name="titulo"
-                  value={taskForm.titulo}
-                  onChange={handleTaskFormChange}
-                  style={inputStyle}
-                  maxLength={32}
-                  required
-                />
-              </div>
-
-              <div style={{ gridColumn: "1 / -1" }}>
-                <label style={labelStyle}>Descripción</label>
-                <textarea
-                  name="descripcion"
-                  value={taskForm.descripcion}
-                  onChange={handleTaskFormChange}
-                  maxLength={512}
-                  style={{
-                    ...inputStyle,
-                    minHeight: "90px",
-                    resize: "vertical",
-                    fontFamily: "inherit",
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Owner</label>
-                <input
-                  type="text"
-                  name="owner"
-                  value={taskForm.owner}
-                  onChange={handleTaskFormChange}
-                  style={inputStyle}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Fase</label>
-                <select
-                  name="estado_tarea"
-                  value={taskForm.estado_tarea}
-                  onChange={handleTaskFormChange}
-                  style={inputStyle}
-                >
-                  <option value="No Iniciada">No Iniciada</option>
-                  <option value="Planificada">Planificada</option>
-                  <option value="En curso">En curso</option>
-                  <option value="Finalizada">Finalizada</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={labelStyle}>Estado</label>
-                <select
-                  name="situacion"
-                  value={taskForm.situacion}
-                  onChange={handleTaskFormChange}
-                  style={inputStyle}
-                >
-                  <option value="En tiempo">En tiempo</option>
-                  <option value="Riesgo de retraso">Riesgo de retraso</option>
-                  <option value="Retrasado">Retrasado</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={labelStyle}>Fecha inicio</label>
-                <input
-                  type="date"
-                  name="fecha_inicio"
-                  value={taskForm.fecha_inicio}
-                  onChange={handleTaskFormChange}
-                  style={inputStyle}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Fecha fin</label>
-                <input
-                  type="date"
-                  name="fecha_fin"
-                  value={taskForm.fecha_fin}
-                  onChange={handleTaskFormChange}
-                  style={inputStyle}
-                />
-              </div>
+          <div style={tableHeaderStyle}>
+            <div>
+              <h3 style={tableTitleStyle}>Tareas del proyecto</h3>
+              <p style={tableSubtitleStyle}>
+                Mismo contenido y badges, con el formato visual alineado con la tabla de detalle del universo.
+              </p>
             </div>
 
-            {taskErrorMsg && (
+            <button
+              type="button"
+              style={primaryButtonStyle}
+              onClick={() => {
+                setShowTaskForm((prev) => !prev);
+                setTaskErrorMsg("");
+              }}
+            >
+              {showTaskForm ? "Cancelar" : "+ Nueva tarea"}
+            </button>
+          </div>
+
+          {showTaskForm && (
+            <form
+              onSubmit={handleCreateTask}
+              style={{
+                border: "1px solid #e5e7eb",
+                borderRadius: "12px",
+                padding: "16px",
+                marginBottom: "20px",
+                background: "#f9fafb",
+              }}
+            >
               <div
                 style={{
-                  marginTop: "16px",
-                  padding: "12px",
-                  borderRadius: "8px",
-                  background: "#fef2f2",
-                  border: "1px solid #fecaca",
-                  color: "#b91c1c",
-                  fontSize: "14px",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: "16px",
                 }}
               >
-                {taskErrorMsg}
-              </div>
-            )}
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={labelStyle}>Título de la tarea</label>
+                  <input
+                    type="text"
+                    name="titulo"
+                    value={taskForm.titulo}
+                    onChange={handleTaskFormChange}
+                    style={inputStyle}
+                    maxLength={32}
+                    required
+                  />
+                </div>
 
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                justifyContent: "flex-end",
-                marginTop: "16px",
-              }}
-            >
-              <button
-                type="button"
-                style={secondaryButtonStyle}
-                onClick={() => {
-                  setShowTaskForm(false);
-                  setTaskErrorMsg("");
-                }}
-              >
-                Cancelar
-              </button>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={labelStyle}>Descripción</label>
+                  <textarea
+                    name="descripcion"
+                    value={taskForm.descripcion}
+                    onChange={handleTaskFormChange}
+                    maxLength={512}
+                    style={{
+                      ...inputStyle,
+                      minHeight: "90px",
+                      resize: "vertical",
+                      fontFamily: "inherit",
+                    }}
+                  />
+                </div>
 
-              <button
-                type="submit"
-                style={primaryButtonStyle}
-                disabled={savingTask}
-              >
-                {savingTask ? "Guardando..." : "Guardar tarea"}
-              </button>
-            </div>
-          </form>
-        )}
+                <div>
+                  <label style={labelStyle}>Owner</label>
+                  <input
+                    type="text"
+                    name="owner"
+                    value={taskForm.owner}
+                    onChange={handleTaskFormChange}
+                    style={inputStyle}
+                  />
+                </div>
 
-        {tareas.length === 0 ? (
-          <p style={{ marginBottom: 0, color: "#6b7280" }}>
-            Este proyecto todavía no tiene tareas.
-          </p>
-        ) : (
-          <div style={tableWrapperStyle}>
-            <table style={tableStyle}>
-              <thead>
-                <tr>
-                  <th style={{ ...thStyle, width: "180px" }}>Título</th>
-                  <th style={{ ...thStyle, width: "320px" }}>Descripción</th>
-                  <th style={{ ...thStyle, width: "140px" }}>Owner</th>
-                  <th style={{ ...thStyle, width: "110px" }}>Inicio</th>
-                  <th style={{ ...thStyle, width: "110px" }}>Fin</th>
-                  <th style={{ ...thStyle, width: "140px" }}>Fase</th>
-                  <th style={{ ...thStyle, width: "140px" }}>Estado</th>
-                  <th style={{ ...thStyle, width: "90px" }}>Retraso</th>
-                  <th style={{ ...thStyle, width: "110px" }}>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tareas.map((tarea) => (
-                  <tr key={tarea.id_tarea}>
-                    <td style={tdTitleStyle} title={tarea.titulo || ""}>
-                      {tarea.titulo || "-"}
-                    </td>
-                    <td style={tdDescriptionStyle}>{tarea.descripcion || "-"}</td>
-                    <td style={tdOwnerStyle} title={tarea.owner || ""}>
-                      {tarea.owner || "-"}
-                    </td>
-                    <td style={tdDateStyle}>{formatDate(tarea.fecha_inicio)}</td>
-                    <td style={tdDateStyle}>{formatDate(tarea.fecha_fin)}</td>
-                    <td style={tdBadgeStyle}>
-                      <span
-                        style={{
-                          ...badgeStyle,
-                          ...getTaskPhaseBadgeStyle(tarea.estado_tarea),
-                        }}
-                      >
-                        {tarea.estado_tarea || "-"}
-                      </span>
-                    </td>
-                    <td style={tdBadgeStyle}>
-                      <span
-                        style={{
-                          ...badgeStyle,
-                          ...getTaskStatusBadgeStyle(tarea.situacion),
-                        }}
-                      >
-                        {tarea.situacion || "-"}
-                      </span>
-                    </td>
-                    <td style={tdDelayStyle}>{formatTaskDelay(tarea.fecha_fin, tarea.situacion)}</td>
-                    <td style={tdActionsStyle}>
-                      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingTask(tarea);
-                            setShowEditModal(true);
-                          }}
-                          title="Editar tarea"
-                          aria-label="Editar tarea"
-                          style={{
-                            background: "#eff6ff",
-                            color: "#2563eb",
-                            border: "1px solid #bfdbfe",
-                            borderRadius: "10px",
-                            width: "36px",
-                            height: "36px",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <Settings size={16} />
-                        </button>
-                    
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteTask(tarea.id_tarea)}
-                          title="Eliminar tarea"
-                          aria-label="Eliminar tarea"
-                          style={{
-                            background: "#fef2f2",
-                            color: "#dc2626",
-                            border: "1px solid #fecaca",
-                            borderRadius: "10px",
-                            width: "36px",
-                            height: "36px",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <Trash size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+                <div>
+                  <label style={labelStyle}>Fase</label>
+                  <select
+                    name="estado_tarea"
+                    value={taskForm.estado_tarea}
+                    onChange={handleTaskFormChange}
+                    style={inputStyle}
+                  >
+                    <option value="No Iniciada">No Iniciada</option>
+                    <option value="Planificada">Planificada</option>
+                    <option value="En curso">En curso</option>
+                    <option value="Finalizada">Finalizada</option>
+                  </select>
+                </div>
 
-      <section style={tableCardStyle}>
-        <div style={tableHeaderStyle}>
-          <div>
-            <h3 style={tableTitleStyle}>Costes del proyecto</h3>
-            <p style={tableSubtitleStyle}>
-              Tabla con el mismo lenguaje visual que en UniverseDetailPage.
-            </p>
-          </div>
+                <div>
+                  <label style={labelStyle}>Estado</label>
+                  <select
+                    name="situacion"
+                    value={taskForm.situacion}
+                    onChange={handleTaskFormChange}
+                    style={inputStyle}
+                  >
+                    <option value="En tiempo">En tiempo</option>
+                    <option value="Riesgo de retraso">Riesgo de retraso</option>
+                    <option value="Retrasado">Retrasado</option>
+                  </select>
+                </div>
 
-          <button
-            type="button"
-            style={primaryButtonStyle}
-            onClick={() => {
-              setShowCostForm((prev) => !prev);
-              setCostErrorMsg("");
-            }}
-          >
-            {showCostForm ? "Cancelar" : "+ Nuevo coste"}
-          </button>
-        </div>
+                <div>
+                  <label style={labelStyle}>Fecha inicio</label>
+                  <input
+                    type="date"
+                    name="fecha_inicio"
+                    value={taskForm.fecha_inicio}
+                    onChange={handleTaskFormChange}
+                    style={inputStyle}
+                  />
+                </div>
 
-        {showCostForm && (
-          <form
-            onSubmit={handleCreateCost}
-            style={{
-              border: "1px solid #e5e7eb",
-              borderRadius: "12px",
-              padding: "16px",
-              marginBottom: "20px",
-              background: "#f9fafb",
-            }}
-          >
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: "16px",
-              }}
-            >
-              <div style={{ gridColumn: "1 / -1" }}>
-                <label style={labelStyle}>Título</label>
-                <input
-                  type="text"
-                  name="titulo"
-                  value={costForm.titulo}
-                  onChange={handleCostFormChange}
-                  style={inputStyle}
-                  required
-                />
+                <div>
+                  <label style={labelStyle}>Fecha fin</label>
+                  <input
+                    type="date"
+                    name="fecha_fin"
+                    value={taskForm.fecha_fin}
+                    onChange={handleTaskFormChange}
+                    style={inputStyle}
+                  />
+                </div>
               </div>
 
-              <div style={{ gridColumn: "1 / -1" }}>
-                <label style={labelStyle}>Descripción</label>
-                <textarea
-                  name="descripcion"
-                  value={costForm.descripcion}
-                  onChange={handleCostFormChange}
+              {taskErrorMsg && (
+                <div
                   style={{
-                    ...inputStyle,
-                    minHeight: "90px",
-                    resize: "vertical",
+                    marginTop: "16px",
+                    padding: "12px",
+                    borderRadius: "8px",
+                    background: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    color: "#b91c1c",
+                    fontSize: "14px",
                   }}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Tipo de coste</label>
-                <select
-                  name="tipo_coste"
-                  value={costForm.tipo_coste}
-                  onChange={handleCostFormChange}
-                  style={inputStyle}
                 >
-                  <option value="OpEx">OpEx</option>
-                  <option value="CapEx">CapEx</option>
-                </select>
-              </div>
+                  {taskErrorMsg}
+                </div>
+              )}
 
-              <div>
-                <label style={labelStyle}>Importe (€)</label>
-                <input
-                  type="number"
-                  name="importe"
-                  value={costForm.importe}
-                  onChange={handleCostFormChange}
-                  style={inputStyle}
-                  step="0.01"
-                />
-              </div>
-            </div>
-
-            {costErrorMsg && (
               <div
                 style={{
+                  display: "flex",
+                  gap: "12px",
+                  justifyContent: "flex-end",
                   marginTop: "16px",
-                  padding: "12px",
-                  borderRadius: "8px",
-                  background: "#fef2f2",
-                  border: "1px solid #fecaca",
-                  color: "#b91c1c",
-                  fontSize: "14px",
                 }}
               >
-                {costErrorMsg}
-              </div>
-            )}
+                <button
+                  type="button"
+                  style={secondaryButtonStyle}
+                  onClick={() => {
+                    setShowTaskForm(false);
+                    setTaskErrorMsg("");
+                  }}
+                >
+                  Cancelar
+                </button>
 
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                justifyContent: "flex-end",
-                marginTop: "16px",
+                <button type="submit" style={primaryButtonStyle} disabled={savingTask}>
+                  {savingTask ? "Guardando..." : "Guardar tarea"}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {tareas.length === 0 ? (
+            <p style={{ marginBottom: 0, color: "#6b7280" }}>Este proyecto todavía no tiene tareas.</p>
+          ) : (
+            <div style={tableWrapperStyle}>
+              <table style={tableStyle}>
+                <thead>
+                  <tr>
+                    <th style={{ ...thStyle, width: "180px" }}>Título</th>
+                    <th style={{ ...thStyle, width: "320px" }}>Descripción</th>
+                    <th style={{ ...thStyle, width: "140px" }}>Owner</th>
+                    <th style={{ ...thStyle, width: "110px" }}>Inicio</th>
+                    <th style={{ ...thStyle, width: "110px" }}>Fin</th>
+                    <th style={{ ...thStyle, width: "140px" }}>Fase</th>
+                    <th style={{ ...thStyle, width: "140px" }}>Estado</th>
+                    <th style={{ ...thStyle, width: "90px" }}>Retraso</th>
+                    <th style={{ ...thStyle, width: "110px" }}>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tareas.map((tarea) => (
+                    <tr key={tarea.id_tarea}>
+                      <td style={tdTitleStyle} title={tarea.titulo || ""}>
+                        {tarea.titulo || "-"}
+                      </td>
+                      <td style={tdDescriptionStyle}>{tarea.descripcion || "-"}</td>
+                      <td style={tdOwnerStyle} title={tarea.owner || ""}>
+                        {tarea.owner || "-"}
+                      </td>
+                      <td style={tdDateStyle}>{formatDate(tarea.fecha_inicio)}</td>
+                      <td style={tdDateStyle}>{formatDate(tarea.fecha_fin)}</td>
+                      <td style={tdBadgeStyle}>
+                        <span
+                          style={{
+                            ...badgeStyle,
+                            ...getTaskPhaseBadgeStyle(tarea.estado_tarea),
+                          }}
+                        >
+                          {tarea.estado_tarea || "-"}
+                        </span>
+                      </td>
+                      <td style={tdBadgeStyle}>
+                        <span
+                          style={{
+                            ...badgeStyle,
+                            ...getSituationBadgeStyle(tarea.situacion),
+                          }}
+                        >
+                          {normalizeSituation(tarea.situacion)}
+                        </span>
+                      </td>
+                      <td style={tdDelayStyle}>{formatTaskDelay(tarea.fecha_fin, tarea.situacion)}</td>
+                      <td style={tdActionsStyle}>
+                        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingTask(tarea);
+                              setShowEditModal(true);
+                            }}
+                            title="Editar tarea"
+                            aria-label="Editar tarea"
+                            style={{
+                              background: "#eff6ff",
+                              color: "#2563eb",
+                              border: "1px solid #bfdbfe",
+                              borderRadius: "10px",
+                              width: "36px",
+                              height: "36px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <Settings size={16} />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTask(tarea.id_tarea)}
+                            title="Eliminar tarea"
+                            aria-label="Eliminar tarea"
+                            style={{
+                              background: "#fef2f2",
+                              color: "#dc2626",
+                              border: "1px solid #fecaca",
+                              borderRadius: "10px",
+                              width: "36px",
+                              height: "36px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <Trash size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        <section style={tableCardStyle}>
+          <div style={tableHeaderStyle}>
+            <div>
+              <h3 style={tableTitleStyle}>Costes del proyecto</h3>
+              <p style={tableSubtitleStyle}>Tabla con el mismo lenguaje visual que en UniverseDetailPage.</p>
+            </div>
+
+            <button
+              type="button"
+              style={primaryButtonStyle}
+              onClick={() => {
+                setShowCostForm((prev) => !prev);
+                setCostErrorMsg("");
               }}
             >
-              <button
-                type="button"
-                style={secondaryButtonStyle}
-                onClick={() => {
-                  setShowCostForm(false);
-                  setCostErrorMsg("");
+              {showCostForm ? "Cancelar" : "+ Nuevo coste"}
+            </button>
+          </div>
+
+          {showCostForm && (
+            <form
+              onSubmit={handleCreateCost}
+              style={{
+                border: "1px solid #e5e7eb",
+                borderRadius: "12px",
+                padding: "16px",
+                marginBottom: "20px",
+                background: "#f9fafb",
+              }}
+            >
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: "16px",
                 }}
               >
-                Cancelar
-              </button>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={labelStyle}>Título</label>
+                  <input
+                    type="text"
+                    name="titulo"
+                    value={costForm.titulo}
+                    onChange={handleCostFormChange}
+                    style={inputStyle}
+                    required
+                  />
+                </div>
 
-              <button
-                type="submit"
-                style={primaryButtonStyle}
-                disabled={savingCost}
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={labelStyle}>Descripción</label>
+                  <textarea
+                    name="descripcion"
+                    value={costForm.descripcion}
+                    onChange={handleCostFormChange}
+                    style={{
+                      ...inputStyle,
+                      minHeight: "90px",
+                      resize: "vertical",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Tipo de coste</label>
+                  <select
+                    name="tipo_coste"
+                    value={costForm.tipo_coste}
+                    onChange={handleCostFormChange}
+                    style={inputStyle}
+                  >
+                    <option value="OpEx">OpEx</option>
+                    <option value="CapEx">CapEx</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Importe (€)</label>
+                  <input
+                    type="number"
+                    name="importe"
+                    value={costForm.importe}
+                    onChange={handleCostFormChange}
+                    style={inputStyle}
+                    step="0.01"
+                  />
+                </div>
+              </div>
+
+              {costErrorMsg && (
+                <div
+                  style={{
+                    marginTop: "16px",
+                    padding: "12px",
+                    borderRadius: "8px",
+                    background: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    color: "#b91c1c",
+                    fontSize: "14px",
+                  }}
+                >
+                  {costErrorMsg}
+                </div>
+              )}
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  justifyContent: "flex-end",
+                  marginTop: "16px",
+                }}
               >
-                {savingCost ? "Guardando..." : "Guardar coste"}
-              </button>
-            </div>
-          </form>
-        )}
-        
-        {costes.length === 0 ? (
-          <p style={{ marginBottom: 0, color: "#6b7280" }}>
-            Este proyecto todavía no tiene costes.
-          </p>
-        ) : (
-          <div style={tableWrapperStyle}>
-            <table style={tableStyle}>
-              <thead>
-                <tr>
-                  <th style={{ ...thStyle, width: "100px" }}>Id Coste</th>
-                  <th style={{ ...thStyle, width: "180px" }}>Título</th>
-                  <th style={{ ...thStyle, width: "500px" }}>Descripción</th>
-                  <th style={{ ...thStyle, width: "100px" }}>Tipo</th>
-                  <th style={{ ...thStyle, width: "100px" }}>Importe</th>
-                </tr>
-              </thead>
-              <tbody>
-                {costes.map((coste) => (
-                  <tr key={coste.id_coste}>
-                    <td style={{ ...tdStyle, width: "100px", whiteSpace: "nowrap" }}>{coste.id_coste}</td>
-                    <td
-                      style={{
-                        ...tdStyle,
-                        width: "180px",
-                        maxWidth: "180px",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        fontWeight: 700,
-                        color: "#0f172a",
-                      }}
-                      title={coste.titulo || ""}
-                    >
-                      {coste.titulo || "-"}
-                    </td>
-                    <td
-                      style={{
-                        ...tdStyle,
-                        width: "500px",
-                        maxWidth: "500px",
-                        whiteSpace: "normal",
-                        wordBreak: "break-word",
-                        overflowWrap: "anywhere",
-                      }}
-                    >
-                      {coste.descripcion || "-"}
-                    </td>
-                    <td
-                      style={{
-                        ...tdStyle,
-                        width: "100px",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {coste.tipo_coste || "-"}
-                    </td>
-                    <td
-                      style={{
-                        ...tdStyle,
-                        width: "100px",
-                        whiteSpace: "nowrap",
-                        textAlign: "right",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {formatCurrency(coste.importe)}
-                    </td>
+                <button
+                  type="button"
+                  style={secondaryButtonStyle}
+                  onClick={() => {
+                    setShowCostForm(false);
+                    setCostErrorMsg("");
+                  }}
+                >
+                  Cancelar
+                </button>
+
+                <button type="submit" style={primaryButtonStyle} disabled={savingCost}>
+                  {savingCost ? "Guardando..." : "Guardar coste"}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {costes.length === 0 ? (
+            <p style={{ marginBottom: 0, color: "#6b7280" }}>Este proyecto todavía no tiene costes.</p>
+          ) : (
+            <div style={tableWrapperStyle}>
+              <table style={tableStyle}>
+                <thead>
+                  <tr>
+                    <th style={{ ...thStyle, width: "100px" }}>Id Coste</th>
+                    <th style={{ ...thStyle, width: "180px" }}>Título</th>
+                    <th style={{ ...thStyle, width: "500px" }}>Descripción</th>
+                    <th style={{ ...thStyle, width: "100px" }}>Tipo</th>
+                    <th style={{ ...thStyle, width: "100px" }}>Importe</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-          {showEditModal && editingTask && (
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(15, 23, 42, 0.45)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "24px",
-          zIndex: 1000,
-        }}
-      >
-        <div
-          style={{
-            width: "100%",
-            maxWidth: "720px",
-            background: "#ffffff",
-            borderRadius: "16px",
-            border: "1px solid #e5e7eb",
-            boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
-            padding: "24px",
-          }}
-        >
+                </thead>
+                <tbody>
+                  {costes.map((coste) => (
+                    <tr key={coste.id_coste}>
+                      <td style={{ ...tdStyle, width: "100px", whiteSpace: "nowrap" }}>{coste.id_coste}</td>
+                      <td
+                        style={{
+                          ...tdStyle,
+                          width: "180px",
+                          maxWidth: "180px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          fontWeight: 700,
+                          color: "#0f172a",
+                        }}
+                        title={coste.titulo || ""}
+                      >
+                        {coste.titulo || "-"}
+                      </td>
+                      <td
+                        style={{
+                          ...tdStyle,
+                          width: "500px",
+                          maxWidth: "500px",
+                          whiteSpace: "normal",
+                          wordBreak: "break-word",
+                          overflowWrap: "anywhere",
+                        }}
+                      >
+                        {coste.descripcion || "-"}
+                      </td>
+                      <td
+                        style={{
+                          ...tdStyle,
+                          width: "100px",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {coste.tipo_coste || "-"}
+                      </td>
+                      <td
+                        style={{
+                          ...tdStyle,
+                          width: "100px",
+                          whiteSpace: "nowrap",
+                          textAlign: "right",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {formatCurrency(coste.importe)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        {showEditModal && editingTask && (
           <div
             style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(15, 23, 42, 0.45)",
               display: "flex",
-              justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: "20px",
+              justifyContent: "center",
+              padding: "24px",
+              zIndex: 1000,
             }}
           >
-            <div>
-              <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>
-                {editingTask.id_tarea}
-              </div>
-              <h3 style={{ margin: 0, color: "#111827" }}>Editar tarea</h3>
-            </div>
-    
-            <button
-              onClick={() => setShowEditModal(false)}
+            <div
               style={{
-                background: "transparent",
-                border: "none",
-                fontSize: "24px",
-                cursor: "pointer",
-                color: "#6b7280",
-                lineHeight: 1,
+                width: "100%",
+                maxWidth: "720px",
+                background: "#ffffff",
+                borderRadius: "16px",
+                border: "1px solid #e5e7eb",
+                boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
+                padding: "24px",
               }}
             >
-              ×
-            </button>
-          </div>
-    
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "16px",
-            }}
-          >
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label
+              <div
                 style={{
-                  display: "block",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: "#374151",
-                  marginBottom: "6px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "20px",
                 }}
               >
-                Título
-              </label>
-              <input
-                type="text"
-                value={editingTask.titulo || ""}
-                onChange={(e) =>
-                  setEditingTask({ ...editingTask, titulo: e.target.value })
-                }
-                maxLength={32}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: "10px",
-                  border: "1px solid #d1d5db",
-                  fontSize: "14px",
-                  boxSizing: "border-box",
-                }}
-              />
-            </div>
+                <div>
+                  <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>
+                    {editingTask.id_tarea}
+                  </div>
+                  <h3 style={{ margin: 0, color: "#111827" }}>Editar tarea</h3>
+                </div>
 
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    fontSize: "24px",
+                    cursor: "pointer",
+                    color: "#6b7280",
+                    lineHeight: 1,
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div
                 style={{
-                  display: "block",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: "#374151",
-                  marginBottom: "6px",
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "16px",
                 }}
               >
-                Descripción
-              </label>
-              <textarea
-                value={editingTask.descripcion || ""}
-                onChange={(e) =>
-                  setEditingTask({ ...editingTask, descripcion: e.target.value })
-                }
-                maxLength={512}
-                rows={4}
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "#374151",
+                      marginBottom: "6px",
+                    }}
+                  >
+                    Título
+                  </label>
+                  <input
+                    type="text"
+                    value={editingTask.titulo || ""}
+                    onChange={(e) => setEditingTask({ ...editingTask, titulo: e.target.value })}
+                    maxLength={32}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      border: "1px solid #d1d5db",
+                      fontSize: "14px",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "#374151",
+                      marginBottom: "6px",
+                    }}
+                  >
+                    Descripción
+                  </label>
+                  <textarea
+                    value={editingTask.descripcion || ""}
+                    onChange={(e) => setEditingTask({ ...editingTask, descripcion: e.target.value })}
+                    maxLength={512}
+                    rows={4}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      border: "1px solid #d1d5db",
+                      fontSize: "14px",
+                      boxSizing: "border-box",
+                      resize: "vertical",
+                      fontFamily: "inherit",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "#374151",
+                      marginBottom: "6px",
+                    }}
+                  >
+                    Owner
+                  </label>
+                  <input
+                    type="text"
+                    value={editingTask.owner || ""}
+                    onChange={(e) => setEditingTask({ ...editingTask, owner: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      border: "1px solid #d1d5db",
+                      fontSize: "14px",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "#374151",
+                      marginBottom: "6px",
+                    }}
+                  >
+                    Estado
+                  </label>
+                  <select
+                    value={editingTask.estado_tarea || "No Iniciada"}
+                    onChange={(e) => setEditingTask({ ...editingTask, estado_tarea: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      border: "1px solid #d1d5db",
+                      fontSize: "14px",
+                      boxSizing: "border-box",
+                      background: "#ffffff",
+                    }}
+                  >
+                    <option value="No Iniciada">No Iniciada</option>
+                    <option value="Planificada">Planificada</option>
+                    <option value="En curso">En curso</option>
+                    <option value="Finalizada">Finalizada</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "#374151",
+                      marginBottom: "6px",
+                    }}
+                  >
+                    Situación
+                  </label>
+                  <select
+                    value={editingTask.situacion || "En tiempo"}
+                    onChange={(e) => setEditingTask({ ...editingTask, situacion: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      border: "1px solid #d1d5db",
+                      fontSize: "14px",
+                      boxSizing: "border-box",
+                      background: "#ffffff",
+                    }}
+                  >
+                    <option value="En tiempo">En tiempo</option>
+                    <option value="Riesgo de retraso">Riesgo de retraso</option>
+                    <option value="Retrasado">Retrasado</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "#374151",
+                      marginBottom: "6px",
+                    }}
+                  >
+                    Fecha inicio
+                  </label>
+                  <input
+                    type="date"
+                    value={editingTask.fecha_inicio || ""}
+                    onChange={(e) => setEditingTask({ ...editingTask, fecha_inicio: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      border: "1px solid #d1d5db",
+                      fontSize: "14px",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "#374151",
+                      marginBottom: "6px",
+                    }}
+                  >
+                    Fecha fin
+                  </label>
+                  <input
+                    type="date"
+                    value={editingTask.fecha_fin || ""}
+                    onChange={(e) => setEditingTask({ ...editingTask, fecha_fin: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      border: "1px solid #d1d5db",
+                      fontSize: "14px",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div
                 style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: "10px",
-                  border: "1px solid #d1d5db",
-                  fontSize: "14px",
-                  boxSizing: "border-box",
-                  resize: "vertical",
-                  fontFamily: "inherit",
-                }}
-              />
-            </div>
-            
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: "#374151",
-                  marginBottom: "6px",
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "12px",
+                  marginTop: "24px",
                 }}
               >
-                Owner
-              </label>
-              <input
-                type="text"
-                value={editingTask.owner || ""}
-                onChange={(e) =>
-                  setEditingTask({ ...editingTask, owner: e.target.value })
-                }
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: "10px",
-                  border: "1px solid #d1d5db",
-                  fontSize: "14px",
-                  boxSizing: "border-box",
-                }}
-              />
-            </div>
-    
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: "#374151",
-                  marginBottom: "6px",
-                }}
-              >
-                Estado
-              </label>
-              <select
-                value={editingTask.estado_tarea || "No Iniciada"}
-                onChange={(e) =>
-                  setEditingTask({ ...editingTask, estado_tarea: e.target.value })
-                }
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: "10px",
-                  border: "1px solid #d1d5db",
-                  fontSize: "14px",
-                  boxSizing: "border-box",
-                  background: "#ffffff",
-                }}
-              >
-                <option value="No Iniciada">No Iniciada</option>
-                <option value="Planificada">Planificada</option>
-                <option value="En curso">En curso</option>
-                <option value="Finalizada">Finalizada</option>
-              </select>
-            </div>
-    
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: "#374151",
-                  marginBottom: "6px",
-                }}
-              >
-                Situación
-              </label>
-              <select
-                value={editingTask.situacion || "En tiempo"}
-                onChange={(e) =>
-                  setEditingTask({ ...editingTask, situacion: e.target.value })
-                }
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: "10px",
-                  border: "1px solid #d1d5db",
-                  fontSize: "14px",
-                  boxSizing: "border-box",
-                  background: "#ffffff",
-                }}
-              >
-                <option value="En tiempo">En tiempo</option>
-                <option value="Riesgo de retraso">Riesgo de retraso</option>
-                <option value="Retrasado">Retrasado</option>
-              </select>
-            </div>
-    
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: "#374151",
-                  marginBottom: "6px",
-                }}
-              >
-                Fecha inicio
-              </label>
-              <input
-                type="date"
-                value={editingTask.fecha_inicio || ""}
-                onChange={(e) =>
-                  setEditingTask({ ...editingTask, fecha_inicio: e.target.value })
-                }
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: "10px",
-                  border: "1px solid #d1d5db",
-                  fontSize: "14px",
-                  boxSizing: "border-box",
-                }}
-              />
-            </div>
-    
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: "#374151",
-                  marginBottom: "6px",
-                }}
-              >
-                Fecha fin
-              </label>
-              <input
-                type="date"
-                value={editingTask.fecha_fin || ""}
-                onChange={(e) =>
-                  setEditingTask({ ...editingTask, fecha_fin: e.target.value })
-                }
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: "10px",
-                  border: "1px solid #d1d5db",
-                  fontSize: "14px",
-                  boxSizing: "border-box",
-                }}
-              />
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  style={{
+                    background: "#f3f4f6",
+                    color: "#111827",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "10px",
+                    padding: "10px 16px",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                  }}
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  onClick={handleUpdateTask}
+                  style={{
+                    background: "#2563eb",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "10px",
+                    padding: "10px 16px",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                  }}
+                >
+                  Guardar cambios
+                </button>
+              </div>
             </div>
           </div>
-    
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              gap: "12px",
-              marginTop: "24px",
-            }}
-          >
-            <button
-              onClick={() => setShowEditModal(false)}
-              style={{
-                background: "#f3f4f6",
-                color: "#111827",
-                border: "1px solid #d1d5db",
-                borderRadius: "10px",
-                padding: "10px 16px",
-                cursor: "pointer",
-                fontWeight: 600,
-              }}
-            >
-              Cancelar
-            </button>
-    
-            <button
-              onClick={handleUpdateTask}
-              style={{
-                background: "#2563eb",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: "10px",
-                padding: "10px 16px",
-                cursor: "pointer",
-                fontWeight: 600,
-              }}
-            >
-              Guardar cambios
-            </button>
-          </div>
-        </div>
+        )}
       </div>
-    )}
     </div>
   );
 }
