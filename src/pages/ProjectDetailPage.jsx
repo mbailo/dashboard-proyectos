@@ -902,10 +902,10 @@ export default function ProjectDetailPage() {
     titulo: "",
     descripcion: "",
     owner: "",
-    Fase: "No Iniciada",
-    Estado: "En tiempo",
-    fecha_inicio_real: "",
-    fecha_fin_real: "",
+    estado_tarea: "No Iniciada",
+    situacion: "En tiempo",
+    fecha_inicio: "",
+    fecha_fin: "",
   });
 
   const [showCostForm, setShowCostForm] = useState(false);
