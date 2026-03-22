@@ -952,6 +952,7 @@ export default function ProjectDetailPage() {
   const [proyecto, setProyecto] = useState(null);
   const [tareas, setTareas] = useState([]);
   const [costes, setCostes] = useState([]);
+  const [impactos, setImpactos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [editingTask, setEditingTask] = useState(null);
@@ -980,6 +981,16 @@ export default function ProjectDetailPage() {
     importe: "",
   });
 
+  const [showImpactForm, setShowImpactForm] = useState(false);
+  const [savingImpact, setSavingImpact] = useState(false);
+  const [impactErrorMsg, setImpactErrorMsg] = useState("");
+  const [impactForm, setImpactForm] = useState({
+    titulo: "",
+    descripcion: "",
+    tipo_impacto: "OpEx",
+    importe: "",
+  });
+  
   async function loadProject(projectId) {
     const { data, error } = await supabase
       .from("v_proyectos_universo_detalle")
@@ -1057,13 +1068,30 @@ export default function ProjectDetailPage() {
     return data || [];
   }
 
+  async function loadImpactos(projectId) {
+    const { data, error } = await supabase
+      .from("impactos_proyecto")
+      .select(`
+        id_impacto,
+        id_proyecto,
+        titulo,
+        descripcion,
+        tipo_impacto,
+        importe
+      `)
+      .eq("id_proyecto", projectId)
+      .order("id_impacto", { ascending: true });
+    if (error) {
+      throw new Error(error.message || "No se pudieron cargar los impactos");
+    }
+    return data || [];
+  }
+  
   async function loadAll() {
     try {
       setLoading(true);
       setErrorMsg("");
-
       const perfil = await getMiPerfil();
-
       if (!perfil || !perfil.activo) {
         navigate("/login", { replace: true });
         return;
@@ -1079,19 +1107,22 @@ export default function ProjectDetailPage() {
         return;
       }
 
-      const [tareasData, costesData] = await Promise.all([
+      const [tareasData, costesData, impactosData] = await Promise.all([
         loadTasks(id),
         loadCostes(id),
+        loadImpactos(id),
       ]);
 
       setProyecto(proyectoData);
       setTareas(tareasData);
       setCostes(costesData);
+      setImpactos(impactosData);
     } catch (err) {
       setErrorMsg(err.message || "Error cargando la ficha del proyecto");
       setProyecto(null);
       setTareas([]);
       setCostes([]);
+      setImpactos([]);
     } finally {
       setLoading(false);
     }
@@ -1162,6 +1193,13 @@ export default function ProjectDetailPage() {
     }));
   }
 
+  function handleImpactFormChange(e) {
+    const { name, value } = e.target;
+    setImpactForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
   async function handleCreateTask(e) {
     e.preventDefault();
     setSavingTask(true);
@@ -1242,6 +1280,43 @@ export default function ProjectDetailPage() {
     }
   }
 
+    async function handleCreateImpact(e) {
+    e.preventDefault();
+    setSavingImpact(true);
+    setImpactErrorMsg("");
+  
+    const { error } = await supabase.rpc("crear_impacto", {
+      p_id_proyecto: id,
+      p_titulo: impactForm.titulo,
+      p_descripcion: impactForm.descripcion || null,
+      p_tipo_impacto: impactForm.tipo_impacto,
+      p_importe: impactForm.importe === "" ? 0 : Number(impactForm.importe),
+    });
+  
+    if (error) {
+      setImpactErrorMsg(error.message || "No se pudo crear el impacto");
+      setSavingImpact(false);
+      return;
+    }
+  
+    setImpactForm({
+      titulo: "",
+      descripcion: "",
+      tipo_impacto: "OpEx",
+      importe: "",
+    });
+  
+    setShowImpactForm(false);
+    setSavingImpact(false);
+  
+    try {
+      const impactosActualizados = await loadImpactos(id);
+      setImpactos(impactosActualizados);
+    } catch (err) {
+      setImpactErrorMsg(err.message || "El impacto se creó, pero no se pudo recargar la tabla");
+    }
+  }
+  
   if (loading) {
     return <p>Cargando proyecto...</p>;
   }
@@ -2010,6 +2085,215 @@ export default function ProjectDetailPage() {
           )}
         </section>
 
+{/* ===== MODAL AÑADIR IMPACTO ===== */}
+        
+        <section style={tableCardStyle}>
+          <div style={tableHeaderStyle}>
+            <div>
+              <h3 style={tableTitleStyle}>Impactos del proyecto</h3>
+              <p style={tableSubtitleStyle}>Detalle de impactos potenciales asociados al proyecto.</p>
+            </div>
+        
+            <button
+              type="button"
+              style={primaryButtonStyle}
+              onClick={() => {
+                setShowImpactForm((prev) => !prev);
+                setImpactErrorMsg("");
+              }}
+            >
+              {showImpactForm ? "Cancelar" : "+ Nuevo impacto"}
+            </button>
+          </div>
+        
+          {showImpactForm && (
+            <form
+              onSubmit={handleCreateImpact}
+              style={{
+                border: "1px solid #e5e7eb",
+                borderRadius: "12px",
+                padding: "16px",
+                marginBottom: "20px",
+                background: "#f9fafb",
+              }}
+            >
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: "16px",
+                }}
+              >
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={labelStyle}>Título</label>
+                  <input
+                    type="text"
+                    name="titulo"
+                    value={impactForm.titulo}
+                    onChange={handleImpactFormChange}
+                    style={inputStyle}
+                    required
+                  />
+                </div>
+        
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={labelStyle}>Descripción</label>
+                  <textarea
+                    name="descripcion"
+                    value={impactForm.descripcion}
+                    onChange={handleImpactFormChange}
+                    style={{
+                      ...inputStyle,
+                      minHeight: "90px",
+                      resize: "vertical",
+                    }}
+                  />
+                </div>
+        
+                <div>
+                  <label style={labelStyle}>Tipo de impacto</label>
+                  <select
+                    name="tipo_impacto"
+                    value={impactForm.tipo_impacto}
+                    onChange={handleImpactFormChange}
+                    style={inputStyle}
+                  >
+                    <option value="OpEx">OpEx</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Ingresos">Ingresos</option>
+                  </select>
+                </div>
+        
+                <div>
+                  <label style={labelStyle}>Importe (€)</label>
+                  <input
+                    type="number"
+                    name="importe"
+                    value={impactForm.importe}
+                    onChange={handleImpactFormChange}
+                    style={inputStyle}
+                    step="0.01"
+                  />
+                </div>
+              </div>
+        
+              {impactErrorMsg && (
+                <div
+                  style={{
+                    marginTop: "16px",
+                    padding: "12px",
+                    borderRadius: "8px",
+                    background: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    color: "#b91c1c",
+                    fontSize: "14px",
+                  }}
+                >
+                  {impactErrorMsg}
+                </div>
+              )}
+        
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  justifyContent: "flex-end",
+                  marginTop: "16px",
+                }}
+              >
+                <button
+                  type="button"
+                  style={secondaryButtonStyle}
+                  onClick={() => {
+                    setShowImpactForm(false);
+                    setImpactErrorMsg("");
+                  }}
+                >
+                  Cancelar
+                </button>
+        
+                <button type="submit" style={primaryButtonStyle} disabled={savingImpact}>
+                  {savingImpact ? "Guardando..." : "Guardar impacto"}
+                </button>
+              </div>
+            </form>
+          )}
+        
+          {impactos.length === 0 ? (
+            <p style={{ marginBottom: 0, color: "#6b7280" }}>Este proyecto todavía no tiene impactos.</p>
+          ) : (
+            <div style={tableWrapperStyle}>
+              <table style={tableStyle}>
+                <thead>
+                  <tr>
+                    <th style={{ ...thStyle, width: "120px" }}>Id Impacto</th>
+                    <th style={{ ...thStyle, width: "180px" }}>Título</th>
+                    <th style={{ ...thStyle, width: "500px" }}>Descripción</th>
+                    <th style={{ ...thStyle, width: "120px" }}>Tipo</th>
+                    <th style={{ ...thStyle, width: "120px" }}>Importe</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {impactos.map((impacto) => (
+                    <tr key={impacto.id_impacto}>
+                      <td style={{ ...tdStyle, width: "120px", whiteSpace: "nowrap" }}>
+                        {impacto.id_impacto}
+                      </td>
+                      <td
+                        style={{
+                          ...tdStyle,
+                          width: "180px",
+                          maxWidth: "180px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          fontWeight: 700,
+                          color: "#0f172a",
+                        }}
+                        title={impacto.titulo || ""}
+                      >
+                        {impacto.titulo || "-"}
+                      </td>
+                      <td
+                        style={{
+                          ...tdStyle,
+                          width: "500px",
+                          maxWidth: "500px",
+                          whiteSpace: "normal",
+                          wordBreak: "break-word",
+                          overflowWrap: "anywhere",
+                        }}
+                      >
+                        {impacto.descripcion || "-"}
+                      </td>
+                      <td
+                        style={{
+                          ...tdStyle,
+                          width: "120px",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {impacto.tipo_impacto || "-"}
+                      </td>
+                      <td
+                        style={{
+                          ...tdStyle,
+                          width: "120px",
+                          whiteSpace: "nowrap",
+                          textAlign: "right",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {formatCurrency(impacto.importe)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+        
 {/* ===== MODAL EDICIÓN TAREA ===== */}
 
         {showEditModal && editingTask && (
