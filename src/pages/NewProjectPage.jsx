@@ -2,9 +2,22 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../supabase"; // cambia a ../supabase si el archivo está en /src
 import { useNavigate } from "react-router-dom";
 
+async function getMiPerfil() {
+  const { data, error } = await supabase.rpc("mi_perfil");
+
+  if (error) {
+    throw error;
+  }
+
+  return data?.[0] || null;
+}
+
 export default function NewProjectPage() {
   const navigate = useNavigate();
   const [universos, setUniversos] = useState([]);
+  const [perfil, setPerfil] = useState(null);
+  const [universoBloqueado, setUniversoBloqueado] = useState(null);
+  const [cargandoAcceso, setCargandoAcceso] = useState(true);
   const [mensaje, setMensaje] = useState("");
   const [tipoMensaje, setTipoMensaje] = useState("");
 
@@ -21,22 +34,89 @@ export default function NewProjectPage() {
   });
 
   useEffect(() => {
-    async function cargarUniversos() {
-      const { data, error } = await supabase
-        .from("universos_negocio")
-        .select("id_universo, nombre")
-        .order("nombre");
+    let mounted = true;
 
-      if (error) {
-        setMensaje(`Error cargando universos: ${error.message}`);
+    async function cargarDatosAcceso() {
+      try {
+        setCargandoAcceso(true);
+        setMensaje("");
+        setTipoMensaje("");
+
+        const perfilData = await getMiPerfil();
+
+        if (!mounted) return;
+
+        if (!perfilData || !perfilData.activo) {
+          navigate("/login", { replace: true });
+          return;
+        }
+
+        setPerfil(perfilData);
+
+        if (perfilData.tipo_acceso === "global") {
+          const { data, error } = await supabase
+            .from("universos_negocio")
+            .select("id_universo, nombre")
+            .order("nombre");
+
+          if (!mounted) return;
+
+          if (error) {
+            setMensaje(`Error cargando universos: ${error.message}`);
+            setTipoMensaje("error");
+          } else {
+            setUniversos(data || []);
+          }
+
+          setCargandoAcceso(false);
+          return;
+        }
+
+        if (
+          perfilData.tipo_acceso === "universo" &&
+          perfilData.id_universo
+        ) {
+          const { data, error } = await supabase
+            .from("universos_negocio")
+            .select("id_universo, nombre")
+            .eq("id_universo", perfilData.id_universo)
+            .single();
+
+          if (!mounted) return;
+
+          if (error) {
+            setMensaje(`Error cargando el universo asignado: ${error.message}`);
+            setTipoMensaje("error");
+            setCargandoAcceso(false);
+            return;
+          }
+
+          setUniversoBloqueado(data);
+          setForm((prev) => ({
+            ...prev,
+            id_universo: String(data.id_universo)
+          }));
+          setCargandoAcceso(false);
+          return;
+        }
+
+        setMensaje("Tu usuario no tiene un perfil válido.");
         setTipoMensaje("error");
-      } else {
-        setUniversos(data || []);
+        setCargandoAcceso(false);
+      } catch (error) {
+        if (!mounted) return;
+        setMensaje(`Error validando acceso: ${error.message}`);
+        setTipoMensaje("error");
+        setCargandoAcceso(false);
       }
     }
 
-    cargarUniversos();
-  }, []);
+    cargarDatosAcceso();
+
+    return () => {
+      mounted = false;
+    };
+  }, [navigate]);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -51,6 +131,21 @@ export default function NewProjectPage() {
     setMensaje("Guardando proyecto...");
     setTipoMensaje("info");
 
+    if (!form.id_universo) {
+      setMensaje("Debes informar un universo válido.");
+      setTipoMensaje("error");
+      return;
+    }
+
+    if (
+      perfil?.tipo_acceso === "universo" &&
+      Number(form.id_universo) !== perfil.id_universo
+    ) {
+      setMensaje("No tienes permiso para crear proyectos en otro universo.");
+      setTipoMensaje("error");
+      return;
+    }
+    
     const { data, error } = await supabase.rpc("crear_proyecto", {
       p_id_universo: Number(form.id_universo),
       p_titulo: form.titulo,
@@ -226,6 +321,10 @@ export default function NewProjectPage() {
     }
   };
 
+  if (cargandoAcceso) {
+    return <div style={{ padding: "24px" }}>Cargando...</div>;
+  }
+  
   const bannerStyle =
     tipoMensaje === "error"
       ? { background: "#fef2f2", color: "#b91c1c", border: "1px solid #fecaca" }
@@ -249,22 +348,45 @@ export default function NewProjectPage() {
           <div style={styles.content}>
             <form onSubmit={handleSubmit} style={styles.form}>
               <div style={styles.grid2}>
+                
                 <div style={styles.field}>
                   <label style={styles.label}>Universo</label>
-                  <select
-                    name="id_universo"
-                    value={form.id_universo}
-                    onChange={handleChange}
-                    required
-                    style={styles.input}
-                  >
-                    <option value="">Selecciona un universo</option>
-                    {universos.map((u) => (
-                      <option key={u.id_universo} value={u.id_universo}>
-                        {u.nombre}
-                      </option>
-                    ))}
-                  </select>
+
+                  {perfil?.tipo_acceso === "global" ? (
+                    <select
+                      name="id_universo"
+                      value={form.id_universo}
+                      onChange={handleChange}
+                      required
+                      style={styles.input}
+                    >
+                      <option value="">Selecciona un universo</option>
+                      {universos.map((u) => (
+                        <option key={u.id_universo} value={u.id_universo}>
+                          {u.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        value={universoBloqueado?.nombre || ""}
+                        readOnly
+                        style={{
+                          ...styles.input,
+                          background: "#f8fafc",
+                          color: "#475569",
+                          cursor: "not-allowed"
+                        }}
+                      />
+                      <input
+                        type="hidden"
+                        name="id_universo"
+                        value={form.id_universo}
+                      />
+                    </>
+                  )}
                 </div>
 
                 <div style={styles.field}>
