@@ -9,25 +9,61 @@ import ProjectDetailPage from "./pages/ProjectDetailPage";
 import LoginPage from "./pages/LoginPage";
 import UniverseDetailPage from "./pages/UniverseDetailPage";
 
+async function getMiPerfil() {
+  const { data, error } = await supabase.rpc("mi_perfil");
+
+  if (error) {
+    throw error;
+  }
+
+  return data?.[0] || null;
+}
+
 function AppRoutes() {
   const location = useLocation();
   const [session, setSession] = useState(undefined);
+  const [perfil, setPerfil] = useState(undefined);
+  const [loadingPerfil, setLoadingPerfil] = useState(true);
 
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (mounted) {
-        setSession(data.session);
+    async function loadAuthState(currentSession) {
+      if (!mounted) return;
+
+      setSession(currentSession);
+
+      if (!currentSession) {
+        setPerfil(null);
+        setLoadingPerfil(false);
+        return;
       }
+
+      try {
+        setLoadingPerfil(true);
+        const perfilData = await getMiPerfil();
+
+        if (!mounted) return;
+
+        setPerfil(perfilData);
+      } catch (error) {
+        if (!mounted) return;
+        setPerfil(null);
+      } finally {
+        if (mounted) {
+          setLoadingPerfil(false);
+        }
+      }
+    }
+
+    supabase.auth.getSession().then(({ data }) => {
+      loadAuthState(data.session);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      if (mounted) {
-        setSession(newSession);
-      }
+      loadAuthState(newSession);
     });
 
     return () => {
@@ -35,22 +71,46 @@ function AppRoutes() {
       subscription.unsubscribe();
     };
   }, []);
-
+  
   // Loading inicial
-  if (session === undefined) {
+  if (session === undefined || loadingPerfil) {
     return <div style={{ padding: "24px" }}>Cargando...</div>;
   }
 
   const isLoginPage = location.pathname === "/login";
 
-  // No autenticado → login
   if (!session && !isLoginPage) {
     return <Navigate to="/login" replace />;
   }
 
-  // Autenticado → no puede ver login
+  if (!session && isLoginPage) {
+    return (
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+      </Routes>
+    );
+  }
+
+  if (session && !perfil) {
+    return <div style={{ padding: "24px" }}>Cargando perfil...</div>;
+  }
+
   if (session && isLoginPage) {
-    return <Navigate to="/" replace />;
+    if (perfil.tipo_acceso === "global") {
+      return <Navigate to="/" replace />;
+    }
+
+    if (perfil.tipo_acceso === "universo" && perfil.id_universo) {
+      return <Navigate to={`/universes/${perfil.id_universo}`} replace />;
+    }
+  }
+
+  if (
+    session &&
+    perfil?.tipo_acceso === "universo" &&
+    location.pathname === "/"
+  ) {
+    return <Navigate to={`/universes/${perfil.id_universo}`} replace />;
   }
 
   return (
@@ -59,7 +119,7 @@ function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
 
       {/* Todo lo demás dentro del layout */}
-      <Route element={<MainLayout />}>
+      <Route element={<MainLayout perfil={perfil} />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/proyectos/nuevo" element={<NewProjectPage />} />
         <Route path="/universes/:id" element={<UniverseDetailPage />} />
