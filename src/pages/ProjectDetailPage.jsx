@@ -1928,6 +1928,8 @@ export default function ProjectDetailPage() {
           )}
         </section>
 
+{/* ===== MODAL EDICIÓN TAREA ===== */}
+        
         {showEditModal && editingTask && (
           <div
             style={{
@@ -2084,7 +2086,7 @@ export default function ProjectDetailPage() {
                       marginBottom: "6px",
                     }}
                   >
-                    Estado
+                    Fase
                   </label>
                   <select
                     value={editingTask.estado_tarea || "No Iniciada"}
@@ -2116,7 +2118,7 @@ export default function ProjectDetailPage() {
                       marginBottom: "6px",
                     }}
                   >
-                    Situación
+                    Estado
                   </label>
                   <select
                     value={editingTask.situacion || "En tiempo"}
