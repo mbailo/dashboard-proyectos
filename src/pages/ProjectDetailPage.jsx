@@ -514,8 +514,8 @@ const tdStyle = {
 
 const tdTitleStyle = {
   ...tdStyle,
-  width: "180px",
-  maxWidth: "180px",
+  width: "150px",
+  maxWidth: "150px",
   whiteSpace: "nowrap",
   overflow: "hidden",
   textOverflow: "ellipsis",
@@ -525,9 +525,9 @@ const tdTitleStyle = {
 
 const tdDescriptionStyle = {
   ...tdStyle,
-  width: "320px",
-  minWidth: "320px",
-  maxWidth: "320px",
+  width: "300px",
+  minWidth: "300px",
+  maxWidth: "300px",
   whiteSpace: "normal",
   wordBreak: "break-word",
   overflowWrap: "anywhere",
@@ -536,8 +536,8 @@ const tdDescriptionStyle = {
 
 const tdOwnerStyle = {
   ...tdStyle,
-  width: "120px",
-  maxWidth: "120px",
+  width: "100px",
+  maxWidth: "100px",
   whiteSpace: "nowrap",
   overflow: "hidden",
   textOverflow: "ellipsis",
@@ -547,25 +547,25 @@ const tdOwnerStyle = {
 
 const tdDateStyle = {
   ...tdStyle,
-  width: "95px",
+  width: "85px",
   whiteSpace: "nowrap",
 };
 
 const tdBadgeStyle = {
   ...tdStyle,
-  width: "125px",
+  width: "110px",
   whiteSpace: "nowrap",
 };
 
 const tdDelayStyle = {
   ...tdStyle,
-  width: "75px",
+  width: "70px",
   whiteSpace: "nowrap",
 };
 
 const tdActionsStyle = {
   ...tdStyle,
-  width: "100px",
+  width: "90px",
   whiteSpace: "nowrap",
 };
 
@@ -659,7 +659,7 @@ const tableWrapperStyle = {
 
 const tableStyle = {
   width: "100%",
-  minWidth: "1100px",
+  minWidth: "1000px",
   margin: "0 auto",
   borderCollapse: "separate",
   borderSpacing: 0,
@@ -679,6 +679,8 @@ const styles = {
     margin: "0 auto",
     display: "grid",
     gap: 14,
+    position: "relative",
+    left: "-24px",
   },
   summaryCard: {
     width: "100%",
@@ -751,7 +753,7 @@ const styles = {
     overflowX: "auto",
   },
   ganttBoard: {
-    minWidth: 1220,
+    minWidth: 1120,            // Ajustamos el ancho del Gantt
     margin: "0 auto",
     border: "1px solid #e2e8f0",
     borderRadius: 16,
@@ -760,7 +762,7 @@ const styles = {
   },
   ganttTopRow: {
     display: "grid",
-    gridTemplateColumns: "280px 1fr 72px",
+    gridTemplateColumns: "240px 1fr 64px",
     borderBottom: "1px solid #e2e8f0",
     background: "#f8fafc",
   },
@@ -833,7 +835,7 @@ const styles = {
   },
   ganttRow: {
     display: "grid",
-    gridTemplateColumns: "280px 1fr 72px",
+    gridTemplateColumns: "240px 1fr 64px",
     minHeight: 52,
     borderBottom: "1px solid #edf2f7",
   },
@@ -1671,16 +1673,16 @@ export default function ProjectDetailPage() {
               <table style={tableStyle}>
                 <thead>
                   <tr>
-                    <th style={{ ...thStyle, width: "180px" }}>Título</th>
-                    <th style={{ ...thStyle, width: "320px" }}>Descripción</th>
-                    <th style={{ ...thStyle, width: "120px" }}>Owner</th>
-                    <th style={{ ...thStyle, width: "95px" }}>Inicio</th>
-                    <th style={{ ...thStyle, width: "95px" }}>Fin</th>
-                    <th style={{ ...thStyle, width: "95px" }}>Fin real</th>
-                    <th style={{ ...thStyle, width: "125px" }}>Fase</th>
-                    <th style={{ ...thStyle, width: "125px" }}>Estado</th>
-                    <th style={{ ...thStyle, width: "75px" }}>Retraso</th>
-                    <th style={{ ...thStyle, width: "100px" }}>Acciones</th>
+                    <th style={{ ...thStyle, width: "150px" }}>Título</th>
+                    <th style={{ ...thStyle, width: "300px" }}>Descripción</th>
+                    <th style={{ ...thStyle, width: "100px" }}>Owner</th>
+                    <th style={{ ...thStyle, width: "85px" }}>Inicio</th>
+                    <th style={{ ...thStyle, width: "85px" }}>Fin</th>
+                    <th style={{ ...thStyle, width: "85px" }}>Fin real</th>
+                    <th style={{ ...thStyle, width: "110px" }}>Fase</th>
+                    <th style={{ ...thStyle, width: "110px" }}>Estado</th>
+                    <th style={{ ...thStyle, width: "70px" }}>Retraso</th>
+                    <th style={{ ...thStyle, width: "90px" }}>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
