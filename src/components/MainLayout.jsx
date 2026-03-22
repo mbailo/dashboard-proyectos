@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 
-export default function MainLayout() {
+export default function MainLayout({ perfil }) {
   const location = useLocation();
 
   const linkStyle = (path) => ({
@@ -42,14 +42,26 @@ export default function MainLayout() {
           </div>
 
           <nav style={{ display: "flex", gap: "10px" }}>
-            <Link to="/" style={linkStyle("/")}>
-              Dashboard
-            </Link>
+            {perfil?.tipo_acceso === "global" && (
+              <Link to="/" style={linkStyle("/")}>
+                Dashboard
+              </Link>
+            )}
+
+            {perfil?.tipo_acceso === "universo" && perfil?.id_universo && (
+              <Link
+                to={`/universes/${perfil.id_universo}`}
+                style={linkStyle(`/universes/${perfil.id_universo}`)}
+              >
+                Mi universo
+              </Link>
+            )}
 
             <Link to="/proyectos/nuevo" style={linkStyle("/proyectos/nuevo")}>
               Nuevo Proyecto
             </Link>
           </nav>
+          
         </div>
       </header>
 
