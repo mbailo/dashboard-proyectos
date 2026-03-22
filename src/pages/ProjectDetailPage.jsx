@@ -1,7 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Settings, Trash } from "lucide-react";
 import { supabase } from "../supabase";
+
+async function getMiPerfil() {
+  const { data, error } = await supabase.rpc("mi_perfil");
+
+  if (error) {
+    throw error;
+  }
+
+  return data?.[0] || null;
+}
 
 function formatCurrency(value) {
   if (value === null || value === undefined) return "-";
@@ -937,6 +947,7 @@ const styles = {
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [proyecto, setProyecto] = useState(null);
   const [tareas, setTareas] = useState([]);
@@ -1051,8 +1062,24 @@ export default function ProjectDetailPage() {
       setLoading(true);
       setErrorMsg("");
 
-      const [proyectoData, tareasData, costesData] = await Promise.all([
-        loadProject(id),
+      const perfil = await getMiPerfil();
+
+      if (!perfil || !perfil.activo) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const proyectoData = await loadProject(id);
+
+      if (
+        perfil.tipo_acceso === "universo" &&
+        proyectoData.id_universo !== perfil.id_universo
+      ) {
+        navigate(`/universes/${perfil.id_universo}`, { replace: true });
+        return;
+      }
+
+      const [tareasData, costesData] = await Promise.all([
         loadTasks(id),
         loadCostes(id),
       ]);
@@ -1117,7 +1144,7 @@ export default function ProjectDetailPage() {
 
   useEffect(() => {
     loadAll();
-  }, [id]);
+  }, [id, navigate]);
 
   function handleTaskFormChange(e) {
     const { name, value } = e.target;
