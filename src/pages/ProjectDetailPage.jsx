@@ -1117,6 +1117,26 @@ export default function ProjectDetailPage() {
     plan_mitigacion: "",
   });
 
+  // --- Estados: edición y eliminación de costes, impactos y riesgos --- //
+  // Cada entidad necesita: un booleano para mostrar/ocultar el modal, el objeto
+  // que se está editando, un booleano de "guardando" para deshabilitar el botón
+  // mientras se espera respuesta de Supabase, y un string para mostrar errores.
+
+  const [showCostEditModal, setShowCostEditModal] = useState(false);
+  const [editingCost, setEditingCost] = useState(null);
+  const [savingCostEdit, setSavingCostEdit] = useState(false);
+  const [costEditError, setCostEditError] = useState("");
+
+  const [showImpactEditModal, setShowImpactEditModal] = useState(false);
+  const [editingImpact, setEditingImpact] = useState(null);
+  const [savingImpactEdit, setSavingImpactEdit] = useState(false);
+  const [impactEditError, setImpactEditError] = useState("");
+
+  const [showRiskEditModal, setShowRiskEditModal] = useState(false);
+  const [editingRisk, setEditingRisk] = useState(null);
+  const [savingRiskEdit, setSavingRiskEdit] = useState(false);
+  const [riskEditError, setRiskEditError] = useState("");
+  
   // --- Funciones de carga de datos desde Supabase --- //
   
   async function loadProject(projectId) {
@@ -1481,6 +1501,128 @@ async function loadRiesgos(projectId) {
     }
   }
 
+  // --- Handlers: editar y eliminar costes --- //
+  // handleUpdateCost llama a la RPC "actualizar_coste" con los datos del modal.
+  // handleDeleteCost pide confirmación y llama a la RPC "eliminar_coste".
+
+  const handleUpdateCost = async () => {
+    if (!editingCost) return;
+    setSavingCostEdit(true);
+    setCostEditError("");
+
+    const { error } = await supabase.rpc("actualizar_coste", {
+      p_id_coste:    editingCost.id_coste,
+      p_titulo:      editingCost.titulo,
+      p_descripcion: editingCost.descripcion || null,
+      p_tipo_coste:  editingCost.tipo_coste,
+      p_importe:     editingCost.importe === "" ? 0 : Number(editingCost.importe),
+    });
+
+    if (error) {
+      setCostEditError(error.message || "No se pudo guardar el coste");
+      setSavingCostEdit(false);
+      return;
+    }
+
+    await loadAll();
+    setShowCostEditModal(false);
+    setEditingCost(null);
+    setSavingCostEdit(false);
+  };
+
+  async function handleDeleteCost(idCoste) {
+    const confirmed = window.confirm("¿Seguro que quieres eliminar este coste?");
+    if (!confirmed) return;
+    try {
+      const { error } = await supabase.rpc("eliminar_coste", { p_id_coste: idCoste });
+      if (error) throw error;
+      await loadAll();
+    } catch (err) {
+      alert(err.message || "Error al eliminar el coste");
+    }
+  }
+
+  // --- Handlers: editar y eliminar impactos --- //
+  // handleUpdateImpact llama a la RPC "actualizar_impacto" con los datos del modal.
+  // handleDeleteImpact pide confirmación y llama a la RPC "eliminar_impacto".
+
+  const handleUpdateImpact = async () => {
+    if (!editingImpact) return;
+    setSavingImpactEdit(true);
+    setImpactEditError("");
+
+    const { error } = await supabase.rpc("actualizar_impacto", {
+      p_id_impacto:  editingImpact.id_impacto,
+      p_titulo:      editingImpact.titulo,
+      p_descripcion: editingImpact.descripcion || null,
+      p_tipo_impacto: editingImpact.tipo_impacto,
+      p_importe:     editingImpact.importe === "" ? 0 : Number(editingImpact.importe),
+    });
+
+    if (error) {
+      setImpactEditError(error.message || "No se pudo guardar el impacto");
+      setSavingImpactEdit(false);
+      return;
+    }
+
+    await loadAll();
+    setShowImpactEditModal(false);
+    setEditingImpact(null);
+    setSavingImpactEdit(false);
+  };
+
+  async function handleDeleteImpact(idImpacto) {
+    const confirmed = window.confirm("¿Seguro que quieres eliminar este impacto?");
+    if (!confirmed) return;
+    try {
+      const { error } = await supabase.rpc("eliminar_impacto", { p_id_impacto: idImpacto });
+      if (error) throw error;
+      await loadAll();
+    } catch (err) {
+      alert(err.message || "Error al eliminar el impacto");
+    }
+  }
+
+  // --- Handlers: editar y eliminar riesgos --- //
+  // handleUpdateRisk llama a la RPC "actualizar_riesgo" con los datos del modal.
+  // handleDeleteRisk pide confirmación y llama a la RPC "eliminar_riesgo".
+
+  const handleUpdateRisk = async () => {
+    if (!editingRisk) return;
+    setSavingRiskEdit(true);
+    setRiskEditError("");
+
+    const { error } = await supabase.rpc("actualizar_riesgo", {
+      p_id_riesgo:       editingRisk.id_riesgo,
+      p_descripcion:     editingRisk.descripcion,
+      p_categoria:       editingRisk.categoria,
+      p_plan_mitigacion: editingRisk.plan_mitigacion || null,
+    });
+
+    if (error) {
+      setRiskEditError(error.message || "No se pudo guardar el riesgo");
+      setSavingRiskEdit(false);
+      return;
+    }
+
+    await loadAll();
+    setShowRiskEditModal(false);
+    setEditingRisk(null);
+    setSavingRiskEdit(false);
+  };
+
+  async function handleDeleteRisk(idRiesgo) {
+    const confirmed = window.confirm("¿Seguro que quieres eliminar este riesgo?");
+    if (!confirmed) return;
+    try {
+      const { error } = await supabase.rpc("eliminar_riesgo", { p_id_riesgo: idRiesgo });
+      if (error) throw error;
+      await loadAll();
+    } catch (err) {
+      alert(err.message || "Error al eliminar el riesgo");
+    }
+  }
+  
   // --- Handlers: crear costes --- //
   
   async function handleCreateCost(e) {
@@ -2309,6 +2451,7 @@ async function loadRiesgos(projectId) {
                     <th style={{ ...thStyle, width: "500px" }}>Descripción</th>
                     <th style={{ ...thStyle, width: "120px" }}>Tipo</th>
                     <th style={{ ...thStyle, width: "120px" }}>Importe</th>
+                    <th style={{ ...thStyle, width: "90px" }}>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2363,6 +2506,54 @@ async function loadRiesgos(projectId) {
                         }}
                       >
                         {formatCurrency(impacto.importe)}
+                      </td>
+                      <td style={tdActionsStyle}>
+                        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingImpact({ ...impacto });
+                              setImpactEditError("");
+                              setShowImpactEditModal(true);
+                            }}
+                            title="Editar impacto"
+                            aria-label="Editar impacto"
+                            style={{
+                              background: "#eff6ff",
+                              color: "#2563eb",
+                              border: "1px solid #bfdbfe",
+                              borderRadius: "10px",
+                              width: "36px",
+                              height: "36px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <Settings size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteImpact(impacto.id_impacto)}
+                            title="Eliminar impacto"
+                            aria-label="Eliminar impacto"
+                            style={{
+                              background: "#fef2f2",
+                              color: "#dc2626",
+                              border: "1px solid #fecaca",
+                              borderRadius: "10px",
+                              width: "36px",
+                              height: "36px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <Trash size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -2516,7 +2707,8 @@ async function loadRiesgos(projectId) {
                     <th style={{ ...thStyle, width: "180px" }}>Título</th>
                     <th style={{ ...thStyle, width: "500px" }}>Descripción</th>
                     <th style={{ ...thStyle, width: "100px" }}>Tipo</th>
-                    <th style={{ ...thStyle, width: "100px" }}>Importe</th>
+                   <th style={{ ...thStyle, width: "100px" }}>Importe</th>
+                  <th style={{ ...thStyle, width: "90px" }}>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2569,6 +2761,54 @@ async function loadRiesgos(projectId) {
                         }}
                       >
                         {formatCurrency(coste.importe)}
+                      </td>
+                      <td style={tdActionsStyle}>
+                        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingCost({ ...coste });
+                              setCostEditError("");
+                              setShowCostEditModal(true);
+                            }}
+                            title="Editar coste"
+                            aria-label="Editar coste"
+                            style={{
+                              background: "#eff6ff",
+                              color: "#2563eb",
+                              border: "1px solid #bfdbfe",
+                              borderRadius: "10px",
+                              width: "36px",
+                              height: "36px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <Settings size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCost(coste.id_coste)}
+                            title="Eliminar coste"
+                            aria-label="Eliminar coste"
+                            style={{
+                              background: "#fef2f2",
+                              color: "#dc2626",
+                              border: "1px solid #fecaca",
+                              borderRadius: "10px",
+                              width: "36px",
+                              height: "36px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <Trash size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -2735,6 +2975,7 @@ async function loadRiesgos(projectId) {
                     <th style={{ ...thStyle, width: "140px" }}>Categoría</th>
                     <th style={{ ...thStyle, width: "360px" }}>Descripción</th>
                     <th style={{ ...thStyle, width: "360px" }}>Plan de mitigación</th>
+                    <th style={{ ...thStyle, width: "90px" }}>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2784,6 +3025,54 @@ async function loadRiesgos(projectId) {
                         }}
                       >
                         {riesgo.plan_mitigacion || "Sin plan de mitigación"}
+                      </td>
+                      <td style={tdActionsStyle}>
+                        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingRisk({ ...riesgo });
+                              setRiskEditError("");
+                              setShowRiskEditModal(true);
+                            }}
+                            title="Editar riesgo"
+                            aria-label="Editar riesgo"
+                            style={{
+                              background: "#eff6ff",
+                              color: "#2563eb",
+                              border: "1px solid #bfdbfe",
+                              borderRadius: "10px",
+                              width: "36px",
+                              height: "36px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <Settings size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteRisk(riesgo.id_riesgo)}
+                            title="Eliminar riesgo"
+                            aria-label="Eliminar riesgo"
+                            style={{
+                              background: "#fef2f2",
+                              color: "#dc2626",
+                              border: "1px solid #fecaca",
+                              borderRadius: "10px",
+                              width: "36px",
+                              height: "36px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <Trash size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -2977,7 +3266,432 @@ async function loadRiesgos(projectId) {
             </div>
           </div>
         )}
-       
+
+      {/* ===== MODAL EDICIÓN RIESGO ===== */}
+      {/* Permite modificar descripción, categoría y plan de mitigación de un riesgo existente.
+          Se abre al pulsar el engranaje en la tabla de riesgos.
+          Llama a la RPC "actualizar_riesgo" en Supabase al guardar. */}
+      
+      {showRiskEditModal && editingRisk && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "24px",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "620px",
+              background: "#ffffff",
+              borderRadius: "16px",
+              border: "1px solid #e5e7eb",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
+              padding: "24px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "20px",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>
+                  {editingRisk.id_riesgo}
+                </div>
+                <h3 style={{ margin: 0, color: "#111827" }}>Editar riesgo</h3>
+              </div>
+              <button
+                onClick={() => setShowRiskEditModal(false)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  fontSize: "24px",
+                  cursor: "pointer",
+                  color: "#6b7280",
+                  lineHeight: 1,
+                }}
+              >
+                ×
+              </button>
+            </div>
+      
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+              <div>
+                <label style={labelStyle}>Categoría</label>
+                <select
+                  value={editingRisk.categoria || "Riesgo de retraso"}
+                  onChange={(e) => setEditingRisk({ ...editingRisk, categoria: e.target.value })}
+                  style={{ ...inputStyle, borderRadius: "10px", background: "#ffffff" }}
+                >
+                  <option value="Riesgo de retraso">Riesgo de retraso</option>
+                  <option value="Desvío de coste">Desvío de coste</option>
+                  <option value="Desvío de impacto">Desvío de impacto</option>
+                  <option value="Dependencia externa">Dependencia externa</option>
+                  <option value="Otros">Otros</option>
+                </select>
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={labelStyle}>
+                  Descripción{" "}
+                  <span style={{ fontWeight: 400, color: "#9ca3af" }}>(máx. 256 caracteres)</span>
+                </label>
+                <textarea
+                  value={editingRisk.descripcion || ""}
+                  onChange={(e) => setEditingRisk({ ...editingRisk, descripcion: e.target.value })}
+                  rows={3}
+                  maxLength={256}
+                  style={{ ...inputStyle, borderRadius: "10px", resize: "vertical", fontFamily: "inherit" }}
+                />
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={labelStyle}>
+                  Plan de mitigación{" "}
+                  <span style={{ fontWeight: 400, color: "#9ca3af" }}>(máx. 256 caracteres)</span>
+                </label>
+                <textarea
+                  value={editingRisk.plan_mitigacion || ""}
+                  onChange={(e) => setEditingRisk({ ...editingRisk, plan_mitigacion: e.target.value })}
+                  rows={3}
+                  maxLength={256}
+                  style={{ ...inputStyle, borderRadius: "10px", resize: "vertical", fontFamily: "inherit" }}
+                />
+              </div>
+            </div>
+      
+            {riskEditError && (
+              <div
+                style={{
+                  marginTop: "16px",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  background: "#fef2f2",
+                  border: "1px solid #fecaca",
+                  color: "#b91c1c",
+                  fontSize: "14px",
+                }}
+              >
+                {riskEditError}
+              </div>
+            )}
+      
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
+              <button
+                onClick={() => setShowRiskEditModal(false)}
+                style={{ ...secondaryButtonStyle, borderRadius: "10px" }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleUpdateRisk}
+                disabled={savingRiskEdit}
+                style={{
+                  ...primaryButtonStyle,
+                  borderRadius: "10px",
+                  background: savingRiskEdit ? "#93c5fd" : "#2563eb",
+                  cursor: savingRiskEdit ? "default" : "pointer",
+                }}
+              >
+                {savingRiskEdit ? "Guardando..." : "Guardar cambios"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+              
+      {/* ===== MODAL EDICIÓN IMPACTO ===== */}
+      {/* Permite modificar título, descripción, tipo e importe de un impacto existente.
+          Se abre al pulsar el engranaje en la tabla de impactos.
+          Llama a la RPC "actualizar_impacto" en Supabase al guardar. */}
+      
+      {showImpactEditModal && editingImpact && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "24px",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "620px",
+              background: "#ffffff",
+              borderRadius: "16px",
+              border: "1px solid #e5e7eb",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
+              padding: "24px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "20px",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>
+                  {editingImpact.id_impacto}
+                </div>
+                <h3 style={{ margin: 0, color: "#111827" }}>Editar impacto</h3>
+              </div>
+              <button
+                onClick={() => setShowImpactEditModal(false)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  fontSize: "24px",
+                  cursor: "pointer",
+                  color: "#6b7280",
+                  lineHeight: 1,
+                }}
+              >
+                ×
+              </button>
+            </div>
+      
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+              <div>
+                <label style={labelStyle}>Título</label>
+                <input
+                  type="text"
+                  value={editingImpact.titulo || ""}
+                  onChange={(e) => setEditingImpact({ ...editingImpact, titulo: e.target.value })}
+                  style={{ ...inputStyle, borderRadius: "10px" }}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Tipo de impacto</label>
+                <select
+                  value={editingImpact.tipo_impacto || "OpEx"}
+                  onChange={(e) => setEditingImpact({ ...editingImpact, tipo_impacto: e.target.value })}
+                  style={{ ...inputStyle, borderRadius: "10px", background: "#ffffff" }}
+                >
+                  <option value="OpEx">OpEx</option>
+                  <option value="Personal">Personal</option>
+                  <option value="Alquiler">Alquiler</option>
+                  <option value="Ingr./Margen">Ingr./Margen</option>
+                </select>
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={labelStyle}>Descripción</label>
+                <textarea
+                  value={editingImpact.descripcion || ""}
+                  onChange={(e) => setEditingImpact({ ...editingImpact, descripcion: e.target.value })}
+                  rows={3}
+                  style={{ ...inputStyle, borderRadius: "10px", resize: "vertical", fontFamily: "inherit" }}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Importe (€)</label>
+                <input
+                  type="number"
+                  value={editingImpact.importe ?? ""}
+                  onChange={(e) => setEditingImpact({ ...editingImpact, importe: e.target.value })}
+                  min="0"
+                  step="0.01"
+                  style={{ ...inputStyle, borderRadius: "10px" }}
+                />
+              </div>
+            </div>
+      
+            {impactEditError && (
+              <div
+                style={{
+                  marginTop: "16px",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  background: "#fef2f2",
+                  border: "1px solid #fecaca",
+                  color: "#b91c1c",
+                  fontSize: "14px",
+                }}
+              >
+                {impactEditError}
+              </div>
+            )}
+      
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
+              <button
+                onClick={() => setShowImpactEditModal(false)}
+                style={{ ...secondaryButtonStyle, borderRadius: "10px" }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleUpdateImpact}
+                disabled={savingImpactEdit}
+                style={{
+                  ...primaryButtonStyle,
+                  borderRadius: "10px",
+                  background: savingImpactEdit ? "#93c5fd" : "#2563eb",
+                  cursor: savingImpactEdit ? "default" : "pointer",
+                }}
+              >
+                {savingImpactEdit ? "Guardando..." : "Guardar cambios"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+              
+      {/* ===== MODAL EDICIÓN COSTE ===== */}
+      {/* Permite modificar título, descripción, tipo e importe de un coste existente.
+      Se abre al pulsar el engranaje en la tabla de costes.
+      Llama a la RPC "actualizar_coste" en Supabase al guardar. */}
+
+      {showCostEditModal && editingCost && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "24px",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "620px",
+              background: "#ffffff",
+              borderRadius: "16px",
+              border: "1px solid #e5e7eb",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
+              padding: "24px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "20px",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>
+                  {editingCost.id_coste}
+                </div>
+                <h3 style={{ margin: 0, color: "#111827" }}>Editar coste</h3>
+              </div>
+              <button
+                onClick={() => setShowCostEditModal(false)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  fontSize: "24px",
+                  cursor: "pointer",
+                  color: "#6b7280",
+                  lineHeight: 1,
+                }}
+              >
+                ×
+              </button>
+            </div>
+      
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+              <div>
+                <label style={labelStyle}>Título</label>
+                <input
+                  type="text"
+                  value={editingCost.titulo || ""}
+                  onChange={(e) => setEditingCost({ ...editingCost, titulo: e.target.value })}
+                  style={{ ...inputStyle, borderRadius: "10px" }}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Tipo de coste</label>
+                <select
+                  value={editingCost.tipo_coste || "OpEx"}
+                  onChange={(e) => setEditingCost({ ...editingCost, tipo_coste: e.target.value })}
+                  style={{ ...inputStyle, borderRadius: "10px", background: "#ffffff" }}
+                >
+                  <option value="OpEx">OpEx</option>
+                  <option value="CapEx">CapEx</option>
+                </select>
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={labelStyle}>Descripción</label>
+                <textarea
+                  value={editingCost.descripcion || ""}
+                  onChange={(e) => setEditingCost({ ...editingCost, descripcion: e.target.value })}
+                  rows={3}
+                  style={{ ...inputStyle, borderRadius: "10px", resize: "vertical", fontFamily: "inherit" }}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Importe (€)</label>
+                <input
+                  type="number"
+                  value={editingCost.importe ?? ""}
+                  onChange={(e) => setEditingCost({ ...editingCost, importe: e.target.value })}
+                  min="0"
+                  step="0.01"
+                  style={{ ...inputStyle, borderRadius: "10px" }}
+                />
+              </div>
+            </div>
+      
+            {costEditError && (
+              <div
+                style={{
+                  marginTop: "16px",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  background: "#fef2f2",
+                  border: "1px solid #fecaca",
+                  color: "#b91c1c",
+                  fontSize: "14px",
+                }}
+              >
+                {costEditError}
+              </div>
+            )}
+      
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
+              <button
+                onClick={() => setShowCostEditModal(false)}
+                style={{ ...secondaryButtonStyle, borderRadius: "10px" }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleUpdateCost}
+                disabled={savingCostEdit}
+                style={{
+                  ...primaryButtonStyle,
+                  borderRadius: "10px",
+                  background: savingCostEdit ? "#93c5fd" : "#2563eb",
+                  cursor: savingCostEdit ? "default" : "pointer",
+                }}
+              >
+                {savingCostEdit ? "Guardando..." : "Guardar cambios"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+        
 {/* ===== MODAL EDICIÓN TAREA ===== */}
 
         {showEditModal && editingTask && (
