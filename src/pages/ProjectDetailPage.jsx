@@ -1235,7 +1235,7 @@ async function loadRiesgos(projectId) {
         loadTasks(id),
         loadCostes(id),
         loadImpactos(id),
-        riesgosData(id),
+        loadRiesgos(id),
       ]);
       
 // ===== se guardan los datos en el estado ===== //
