@@ -1082,7 +1082,7 @@ export default function ProjectDetailPage() {
   const [riskErrorMsg, setRiskErrorMsg] = useState("");
   const [riskForm, setRiskForm] = useState({
     descripcion: "",
-    categoria: "Retraso de retraso",
+    categoria: "Riesgo de retraso",
     plan_mitigacion: "",
   });
   
