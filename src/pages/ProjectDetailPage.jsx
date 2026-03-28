@@ -239,6 +239,89 @@ function getProjectStatusBadgeStyle(estado) {
   }
 }
 
+function getRiskCategoryBadgeStyle(categoria) {
+  switch (categoria) {
+    case "Riesgo de retraso":
+      return {
+        display: "inline-flex",
+        alignItems: "center",
+        borderRadius: "999px",
+        padding: "4px 10px",
+        fontSize: "11px",
+        fontWeight: 700,
+        whiteSpace: "nowrap",
+        background: "#fef3c7",
+        color: "#92400e",
+        border: "1px solid #fde68a",
+      };
+    case "Desvío de coste":
+      return {
+        display: "inline-flex",
+        alignItems: "center",
+        borderRadius: "999px",
+        padding: "4px 10px",
+        fontSize: "11px",
+        fontWeight: 700,
+        whiteSpace: "nowrap",
+        background: "#fee2e2",
+        color: "#991b1b",
+        border: "1px solid #fecaca",
+      };
+    case "Desvío de impacto":
+      return {
+        display: "inline-flex",
+        alignItems: "center",
+        borderRadius: "999px",
+        padding: "4px 10px",
+        fontSize: "11px",
+        fontWeight: 700,
+        whiteSpace: "nowrap",
+        background: "#fce7f3",
+        color: "#9d174d",
+        border: "1px solid #fbcfe8",
+      };
+    case "Dependencia externa":
+      return {
+        display: "inline-flex",
+        alignItems: "center",
+        borderRadius: "999px",
+        padding: "4px 10px",
+        fontSize: "11px",
+        fontWeight: 700,
+        whiteSpace: "nowrap",
+        background: "#ede9fe",
+        color: "#5b21b6",
+        border: "1px solid #ddd6fe",
+      };
+    case "Otros":
+      return {
+        display: "inline-flex",
+        alignItems: "center",
+        borderRadius: "999px",
+        padding: "4px 10px",
+        fontSize: "11px",
+        fontWeight: 700,
+        whiteSpace: "nowrap",
+        background: "#dbeafe",
+        color: "#1e40af",
+        border: "1px solid #bfdbfe",
+      };
+    default:
+      return {
+        display: "inline-flex",
+        alignItems: "center",
+        borderRadius: "999px",
+        padding: "4px 10px",
+        fontSize: "11px",
+        fontWeight: 700,
+        whiteSpace: "nowrap",
+        background: "#f8fafc",
+        color: "#475569",
+        border: "1px solid #e2e8f0",
+      };
+  }
+}
+
 function buildTaskTimeline(tasks, project) {
   const today = new Date();
   const currentYear = today.getFullYear();
@@ -948,6 +1031,8 @@ const styles = {
 export default function ProjectDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  
+  {/* ===== ESTADOS INICIALES ===== */}
 
   const [proyecto, setProyecto] = useState(null);
   const [tareas, setTareas] = useState([]);
@@ -989,6 +1074,16 @@ export default function ProjectDetailPage() {
     descripcion: "",
     tipo_impacto: "OpEx",
     importe: "",
+  });
+
+  const [riesgos, setRiesgos] = useState([]);
+  const [showRiskForm, setShowRiskForm] = useState(false);
+  const [savingRisk, setSavingRisk] = useState(false);
+  const [riskErrorMsg, setRiskErrorMsg] = useState("");
+  const [riskForm, setRiskForm] = useState({
+    descripcion: "",
+    categoria: "Retraso en entrega",
+    plan_mitigacion: "",
   });
   
   async function loadProject(projectId) {
@@ -1047,6 +1142,8 @@ export default function ProjectDetailPage() {
     return data || [];
   }
 
+  // ===== Añadir la función de carga y el handler de la tabla COSTES ===== //
+  
   async function loadCostes(projectId) {
     const { data, error } = await supabase
       .from("costes_proyecto")
@@ -1068,6 +1165,8 @@ export default function ProjectDetailPage() {
     return data || [];
   }
 
+  // ===== Añadir la función de carga y el handler de la tabla IMPACTOS ===== //
+  
   async function loadImpactos(projectId) {
     const { data, error } = await supabase
       .from("impactos_proyecto")
@@ -1081,8 +1180,31 @@ export default function ProjectDetailPage() {
       `)
       .eq("id_proyecto", projectId)
       .order("id_impacto", { ascending: true });
+    
     if (error) {
       throw new Error(error.message || "No se pudieron cargar los impactos");
+    }
+    return data || [];
+  }
+
+  // ===== Añadir la función de carga y el handler de la tabla RIESGOS ===== //
+  
+async function loadRiesgos(projectId) {
+    const { data, error } = await supabase
+      .from("riesgos_proyecto")
+      .select(`
+        id_riesgo,
+        id_proyecto,
+        descripcion,
+        categoria,
+        plan_mitigacion,
+        created_at
+      `)
+      .eq("id_proyecto", projectId)
+      .order("id_riesgo", { ascending: true });
+
+    if (error) {
+      throw new Error(error.message || "No se pudieron cargar los riesgos");
     }
     return data || [];
   }
@@ -1107,22 +1229,30 @@ export default function ProjectDetailPage() {
         return;
       }
 
-      const [tareasData, costesData, impactosData] = await Promise.all([
+// ===== Se integra la carga de las variables en el loadAll ===== //
+      
+      const [tareasData, costesData, impactosData, riesgosData] = await Promise.all([
         loadTasks(id),
         loadCostes(id),
         loadImpactos(id),
+        riesgosData(id),
       ]);
-
+      
+// ===== se guardan los datos en el estado ===== //
+      
       setProyecto(proyectoData);
       setTareas(tareasData);
       setCostes(costesData);
       setImpactos(impactosData);
+      setRiesgos(riesgosData);
+      
     } catch (err) {
       setErrorMsg(err.message || "Error cargando la ficha del proyecto");
       setProyecto(null);
       setTareas([]);
       setCostes([]);
       setImpactos([]);
+      setRiesgos([]);
     } finally {
       setLoading(false);
     }
@@ -1200,6 +1330,50 @@ export default function ProjectDetailPage() {
       [name]: value,
     }));
   }
+
+  function handleRiskFormChange(e) {
+    const { name, value } = e.target;
+    setRiskForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
+  async function handleCreateRisk(e) {
+    e.preventDefault();
+    setSavingRisk(true);
+    setRiskErrorMsg("");
+
+    const { error } = await supabase.rpc("crear_riesgo", {
+      p_id_proyecto: id,
+      p_descripcion: riskForm.descripcion,
+      p_categoria: riskForm.categoria,
+      p_plan_mitigacion: riskForm.plan_mitigacion || null,
+    });
+
+    if (error) {
+      setRiskErrorMsg(error.message || "No se pudo crear el riesgo");
+      setSavingRisk(false);
+      return;
+    }
+
+    setRiskForm({
+      descripcion: "",
+      categoria: "Retraso en entrega",
+      plan_mitigacion: "",
+    });
+
+    setShowRiskForm(false);
+    setSavingRisk(false);
+
+    try {
+      const riesgosActualizados = await loadRiesgos(id);
+      setRiesgos(riesgosActualizados);
+    } catch (err) {
+      setRiskErrorMsg(err.message || "El riesgo se creó, pero no se pudo recargar la tabla");
+    }
+  }
+  
   async function handleCreateTask(e) {
     e.preventDefault();
     setSavingTask(true);
@@ -2288,6 +2462,224 @@ export default function ProjectDetailPage() {
                         }}
                       >
                         {formatCurrency(coste.importe)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        {/* ===== BLOQUE DE RIESGOS Y MODAL AÑADIR RIESGO ===== */}
+
+        <section style={tableCardStyle}>
+          <div style={tableHeaderStyle}>
+            <div>
+              <h3 style={tableTitleStyle}>Riesgos del proyecto</h3>
+              <p style={tableSubtitleStyle}>
+                Registro de riesgos identificados y su plan de mitigación.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              style={primaryButtonStyle}
+              onClick={() => {
+                setShowRiskForm((prev) => !prev);
+                setRiskErrorMsg("");
+              }}
+            >
+              {showRiskForm ? "Cancelar" : "+ Nuevo riesgo"}
+            </button>
+          </div>
+
+          {showRiskForm && (
+            <form
+              onSubmit={handleCreateRisk}
+              style={{
+                border: "1px solid #e5e7eb",
+                borderRadius: "12px",
+                padding: "16px",
+                marginBottom: "20px",
+                background: "#f9fafb",
+              }}
+            >
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: "16px",
+                }}
+              >
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={labelStyle}>
+                    Descripción del riesgo{" "}
+                    <span style={{ color: "#94a3b8", fontWeight: 400 }}>
+                      (máx. 256 caracteres)
+                    </span>
+                  </label>
+                  <textarea
+                    name="descripcion"
+                    value={riskForm.descripcion}
+                    onChange={handleRiskFormChange}
+                    maxLength={256}
+                    required
+                    style={{
+                      ...inputStyle,
+                      minHeight: "80px",
+                      resize: "vertical",
+                      fontFamily: "inherit",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Categoría</label>
+                  <select
+                    name="categoria"
+                    value={riskForm.categoria}
+                    onChange={handleRiskFormChange}
+                    style={inputStyle}
+                    required
+                  >
+                    <option value="Retraso en entrega">Retraso en entrega</option>
+                    <option value="Desvío de coste">Desvío de coste</option>
+                    <option value="Desvío de impacto">Desvío de impacto</option>
+                    <option value="Dependencia externa">Dependencia externa</option>
+                    <option value="Riesgo de alcance">Riesgo de alcance</option>
+                    <option value="Riesgo de recursos">Riesgo de recursos</option>
+                    <option value="Riesgo tecnológico">Riesgo tecnológico</option>
+                    <option value="Riesgo regulatorio">Riesgo regulatorio</option>
+                  </select>
+                </div>
+
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={labelStyle}>
+                    Plan de mitigación{" "}
+                    <span style={{ color: "#94a3b8", fontWeight: 400 }}>
+                      (opcional · máx. 256 caracteres)
+                    </span>
+                  </label>
+                  <textarea
+                    name="plan_mitigacion"
+                    value={riskForm.plan_mitigacion}
+                    onChange={handleRiskFormChange}
+                    maxLength={256}
+                    style={{
+                      ...inputStyle,
+                      minHeight: "80px",
+                      resize: "vertical",
+                      fontFamily: "inherit",
+                    }}
+                  />
+                </div>
+              </div>
+
+              {riskErrorMsg && (
+                <div
+                  style={{
+                    marginTop: "16px",
+                    padding: "12px",
+                    borderRadius: "8px",
+                    background: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    color: "#b91c1c",
+                    fontSize: "14px",
+                  }}
+                >
+                  {riskErrorMsg}
+                </div>
+              )}
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  justifyContent: "flex-end",
+                  marginTop: "16px",
+                }}
+              >
+                <button
+                  type="button"
+                  style={secondaryButtonStyle}
+                  onClick={() => {
+                    setShowRiskForm(false);
+                    setRiskErrorMsg("");
+                  }}
+                >
+                  Cancelar
+                </button>
+
+                <button type="submit" style={primaryButtonStyle} disabled={savingRisk}>
+                  {savingRisk ? "Guardando..." : "Guardar riesgo"}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {riesgos.length === 0 ? (
+            <p style={{ marginBottom: 0, color: "#6b7280" }}>
+              Este proyecto todavía no tiene riesgos registrados.
+            </p>
+          ) : (
+            <div style={tableWrapperStyle}>
+              <table style={tableStyle}>
+                <thead>
+                  <tr>
+                    <th style={{ ...thStyle, width: "130px" }}>Id Riesgo</th>
+                    <th style={{ ...thStyle, width: "140px" }}>Categoría</th>
+                    <th style={{ ...thStyle, width: "360px" }}>Descripción</th>
+                    <th style={{ ...thStyle, width: "360px" }}>Plan de mitigación</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {riesgos.map((riesgo) => (
+                    <tr key={riesgo.id_riesgo}>
+                      <td
+                        style={{
+                          ...tdStyle,
+                          width: "130px",
+                          whiteSpace: "nowrap",
+                          fontFamily: "monospace",
+                          fontSize: "12px",
+                          color: "#475569",
+                        }}
+                      >
+                        {riesgo.id_riesgo}
+                      </td>
+                      <td style={{ ...tdStyle, width: "140px", whiteSpace: "nowrap" }}>
+                        <span style={getRiskCategoryBadgeStyle(riesgo.categoria)}>
+                          {riesgo.categoria}
+                        </span>
+                      </td>
+                      <td
+                        style={{
+                          ...tdStyle,
+                          width: "360px",
+                          maxWidth: "360px",
+                          whiteSpace: "normal",
+                          wordBreak: "break-word",
+                          overflowWrap: "anywhere",
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {riesgo.descripcion || "-"}
+                      </td>
+                      <td
+                        style={{
+                          ...tdStyle,
+                          width: "360px",
+                          maxWidth: "360px",
+                          whiteSpace: "normal",
+                          wordBreak: "break-word",
+                          overflowWrap: "anywhere",
+                          lineHeight: 1.4,
+                          color: riesgo.plan_mitigacion ? "#334155" : "#94a3b8",
+                          fontStyle: riesgo.plan_mitigacion ? "normal" : "italic",
+                        }}
+                      >
+                        {riesgo.plan_mitigacion || "Sin plan de mitigación"}
                       </td>
                     </tr>
                   ))}
