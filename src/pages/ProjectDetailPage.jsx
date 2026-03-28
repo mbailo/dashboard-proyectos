@@ -1043,6 +1043,17 @@ export default function ProjectDetailPage() {
   const [editingTask, setEditingTask] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
 
+  const [showProjectEditModal, setShowProjectEditModal] = useState(false);
+  const [savingProject, setSavingProject] = useState(false);
+  const [projectEditError, setProjectEditError] = useState("");
+  const [projectEditForm, setProjectEditForm] = useState({
+    titulo: "",
+    owner: "",
+    horizonte: "",
+    descripcion: "",
+    beneficios: "",
+  });
+  
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [savingTask, setSavingTask] = useState(false);
   const [taskErrorMsg, setTaskErrorMsg] = useState("");
@@ -1258,6 +1269,32 @@ async function loadRiesgos(projectId) {
     }
   }
 
+  // ===== FUNCIÓN ASÍNCRONA PARA LLAMAR A SUPABASE Y ACTUALIZAR LOS CAMPOS DEL PROYECTO ===== //
+  
+  const handleUpdateProject = async () => {
+    setSavingProject(true);
+    setProjectEditError("");
+  
+    const { error } = await supabase.rpc("actualizar_proyecto", {
+      p_id_proyecto:  proyecto.id_proyecto,
+      p_titulo:       projectEditForm.titulo,
+      p_owner:        projectEditForm.owner,
+      p_horizonte:    projectEditForm.horizonte,
+      p_descripcion:  projectEditForm.descripcion || null,
+      p_beneficios:   projectEditForm.beneficios || null,
+    });
+  
+    if (error) {
+      setProjectEditError(error.message || "No se pudo guardar el proyecto");
+      setSavingProject(false);
+      return;
+    }
+  
+    await loadAll();
+    setShowProjectEditModal(false);
+    setSavingProject(false);
+  };
+  
   const handleUpdateTask = async () => {
     if (!editingTask) return;
 
@@ -1585,6 +1622,40 @@ async function loadRiesgos(projectId) {
               <span style={{ ...badgeStyle, background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe" }}>
                 Avance: {proyecto.avance_pct ?? 0}%
               </span>
+
+              {/* ===== AÑADIMOS BOTON PARA EDITAR PROYECTO ===== */}
+              
+              <button
+                  type="button"
+                  onClick={() => {
+                    setProjectEditForm({
+                      titulo:      proyecto.titulo || "",
+                      owner:       proyecto.owner || "",
+                      horizonte:   proyecto.horizonte || "Quick-Win",
+                      descripcion: proyecto.descripcion || "",
+                      beneficios:  proyecto.beneficios || "",
+                    });
+                    setProjectEditError("");
+                    setShowProjectEditModal(true);
+                  }}
+                  title="Editar proyecto"
+                  aria-label="Editar proyecto"
+                  style={{
+                    background: "#eff6ff",
+                    color: "#2563eb",
+                    border: "1px solid #bfdbfe",
+                    borderRadius: "10px",
+                    width: "36px",
+                    height: "36px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                  }}
+                >
+                <Settings size={16} />
+              </button>
+              
             </div>
           </div>
 
@@ -2471,7 +2542,7 @@ async function loadRiesgos(projectId) {
           )}
         </section>
 
-        {/* ===== BLOQUE DE RIESGOS Y MODAL AÑADIR RIESGO ===== */}
+        {/* ===== MODAL AÑADIR RIESGO ===== */}
 
         <section style={tableCardStyle}>
           <div style={tableHeaderStyle}>
@@ -2685,7 +2756,192 @@ async function loadRiesgos(projectId) {
             </div>
           )}
         </section>
+
+        {/* ===== MODAL EDICIÓN PROYECTO ===== */}
+
+        {showProjectEditModal && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(15, 23, 42, 0.45)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "24px",
+              zIndex: 1000,
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                maxWidth: "720px",
+                background: "#ffffff",
+                borderRadius: "16px",
+                border: "1px solid #e5e7eb",
+                boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
+                padding: "24px",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "20px",
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>
+                    {proyecto.id_proyecto}
+                  </div>
+                  <h3 style={{ margin: 0, color: "#111827" }}>Editar proyecto</h3>
+                </div>
         
+                <button
+                  onClick={() => setShowProjectEditModal(false)}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    fontSize: "24px",
+                    cursor: "pointer",
+                    color: "#6b7280",
+                    lineHeight: 1,
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+        
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "16px",
+                }}
+              >
+                <div>
+                  <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#374151", marginBottom: "6px" }}>
+                    Título
+                  </label>
+                  <input
+                    type="text"
+                    value={projectEditForm.titulo}
+                    onChange={(e) => setProjectEditForm({ ...projectEditForm, titulo: e.target.value })}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1px solid #d1d5db", fontSize: "14px", boxSizing: "border-box" }}
+                  />
+                </div>
+        
+                <div>
+                  <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#374151", marginBottom: "6px" }}>
+                    Owner
+                  </label>
+                  <input
+                    type="text"
+                    value={projectEditForm.owner}
+                    onChange={(e) => setProjectEditForm({ ...projectEditForm, owner: e.target.value })}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1px solid #d1d5db", fontSize: "14px", boxSizing: "border-box" }}
+                  />
+                </div>
+        
+                <div>
+                  <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#374151", marginBottom: "6px" }}>
+                    Horizonte
+                  </label>
+                  <select
+                    value={projectEditForm.horizonte}
+                    onChange={(e) => setProjectEditForm({ ...projectEditForm, horizonte: e.target.value })}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1px solid #d1d5db", fontSize: "14px", boxSizing: "border-box", background: "#ffffff" }}
+                  >
+                    <option value="Quick-Win">Quick-Win</option>
+                    <option value="Mid-term">Mid-term</option>
+                  </select>
+                </div>
+        
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#374151", marginBottom: "6px" }}>
+                    Descripción
+                  </label>
+                  <textarea
+                    value={projectEditForm.descripcion}
+                    onChange={(e) => setProjectEditForm({ ...projectEditForm, descripcion: e.target.value })}
+                    rows={4}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1px solid #d1d5db", fontSize: "14px", boxSizing: "border-box", resize: "vertical", fontFamily: "inherit" }}
+                  />
+                </div>
+        
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#374151", marginBottom: "6px" }}>
+                    Beneficios esperados
+                  </label>
+                  <textarea
+                    value={projectEditForm.beneficios}
+                    onChange={(e) => setProjectEditForm({ ...projectEditForm, beneficios: e.target.value })}
+                    rows={4}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1px solid #d1d5db", fontSize: "14px", boxSizing: "border-box", resize: "vertical", fontFamily: "inherit" }}
+                  />
+                </div>
+              </div>
+        
+              {projectEditError && (
+                <div
+                  style={{
+                    marginTop: "16px",
+                    padding: "12px",
+                    borderRadius: "8px",
+                    background: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    color: "#b91c1c",
+                    fontSize: "14px",
+                  }}
+                >
+                  {projectEditError}
+                </div>
+              )}
+        
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "12px",
+                  marginTop: "24px",
+                }}
+              >
+                <button
+                  onClick={() => setShowProjectEditModal(false)}
+                  style={{
+                    background: "#f3f4f6",
+                    color: "#111827",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "10px",
+                    padding: "10px 16px",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                  }}
+                >
+                  Cancelar
+                </button>
+        
+                <button
+                  onClick={handleUpdateProject}
+                  disabled={savingProject}
+                  style={{
+                    background: savingProject ? "#93c5fd" : "#2563eb",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "10px",
+                    padding: "10px 16px",
+                    cursor: savingProject ? "default" : "pointer",
+                    fontWeight: 600,
+                  }}
+                >
+                  {savingProject ? "Guardando..." : "Guardar cambios"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+       
 {/* ===== MODAL EDICIÓN TAREA ===== */}
 
         {showEditModal && editingTask && (
