@@ -2543,14 +2543,11 @@ async function loadRiesgos(projectId) {
                     style={inputStyle}
                     required
                   >
-                    <option value="Retraso en entrega">Retraso en entrega</option>
+                    <option value="Riesto de retraso">Riesto de retraso</option>
                     <option value="Desvío de coste">Desvío de coste</option>
                     <option value="Desvío de impacto">Desvío de impacto</option>
                     <option value="Dependencia externa">Dependencia externa</option>
-                    <option value="Riesgo de alcance">Riesgo de alcance</option>
-                    <option value="Riesgo de recursos">Riesgo de recursos</option>
-                    <option value="Riesgo tecnológico">Riesgo tecnológico</option>
-                    <option value="Riesgo regulatorio">Riesgo regulatorio</option>
+                    <option value="Otros">Otros</option>
                   </select>
                 </div>
 
