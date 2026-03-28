@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Settings, Trash } from "lucide-react";
 import { supabase } from "../supabase";
 
+// ===== UTILIDADES DE FORMATO =====  //
+
 async function getMiPerfil() {
   const { data, error } = await supabase.rpc("mi_perfil");
 
@@ -102,6 +104,8 @@ function getSituationBg(situacion) {
   if (normalized === "Retrasado") return "#fee2e2";
   return "#e2e8f0";
 }
+
+// ===== FUNCIONES DE ESTILO: BADGES Y SEMÁFOROS ===== //
 
 function getSituationBadgeStyle(situacion) {
   return {
@@ -322,6 +326,8 @@ function getRiskCategoryBadgeStyle(categoria) {
   }
 }
 
+// ===== LÓGICA DEL CRONOGRAMA (GANTT) ===== //
+
 function buildTaskTimeline(tasks, project) {
   const today = new Date();
   const currentYear = today.getFullYear();
@@ -390,6 +396,8 @@ function buildTaskTimeline(tasks, project) {
 
   return { start, end, totalDays, months, currentLinePct };
 }
+
+// ===== COMPONENTE: CRONOGRAMA DE TAREAS ===== //
 
 function TaskGanttChart({ tasks, project }) {
   const timeline = useMemo(() => buildTaskTimeline(tasks, project), [tasks, project]);
@@ -579,6 +587,8 @@ function TaskGanttChart({ tasks, project }) {
     </section>
   );
 }
+
+// ===== ESTILOS DE TABLAS Y GANTT ===== //
 
 const thStyle = {
   position: "sticky",
@@ -1028,11 +1038,13 @@ const styles = {
   },
 };
 
+// ===== COMPONENTE PRINCIPAL: FICHA DE PROYECTO ===== //
+
 export default function ProjectDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   
-  {/* ===== ESTADOS INICIALES ===== */}
+  // --- ESTADOS INICIALES proyecto, tareas, costes e impactos --- //
 
   const [proyecto, setProyecto] = useState(null);
   const [tareas, setTareas] = useState([]);
@@ -1043,6 +1055,8 @@ export default function ProjectDetailPage() {
   const [editingTask, setEditingTask] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
 
+// --- Estados: modal de edición del proyecto --- //
+  
   const [showProjectEditModal, setShowProjectEditModal] = useState(false);
   const [savingProject, setSavingProject] = useState(false);
   const [projectEditError, setProjectEditError] = useState("");
@@ -1053,6 +1067,8 @@ export default function ProjectDetailPage() {
     descripcion: "",
     beneficios: "",
   });
+
+  // --- Estados: formulario y modal de tareas --- //
   
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [savingTask, setSavingTask] = useState(false);
@@ -1067,6 +1083,8 @@ export default function ProjectDetailPage() {
     fecha_fin: "",
   });
 
+// --- Estados: formulario y modal de costes --- //
+  
   const [showCostForm, setShowCostForm] = useState(false);
   const [savingCost, setSavingCost] = useState(false);
   const [costErrorMsg, setCostErrorMsg] = useState("");
@@ -1077,6 +1095,8 @@ export default function ProjectDetailPage() {
     importe: "",
   });
 
+// --- Estados: formulario y modal de impactos --- //
+  
   const [showImpactForm, setShowImpactForm] = useState(false);
   const [savingImpact, setSavingImpact] = useState(false);
   const [impactErrorMsg, setImpactErrorMsg] = useState("");
@@ -1096,6 +1116,8 @@ export default function ProjectDetailPage() {
     categoria: "Riesgo de retraso",
     plan_mitigacion: "",
   });
+
+  // --- Funciones de carga de datos desde Supabase --- //
   
   async function loadProject(projectId) {
     const { data, error } = await supabase
@@ -1270,6 +1292,7 @@ async function loadRiesgos(projectId) {
   }
 
   // ===== FUNCIÓN ASÍNCRONA PARA LLAMAR A SUPABASE Y ACTUALIZAR LOS CAMPOS DEL PROYECTO ===== //
+  // --- Handlers: guardar y editar proyecto --- //
   
   const handleUpdateProject = async () => {
     setSavingProject(true);
@@ -1294,6 +1317,8 @@ async function loadRiesgos(projectId) {
     setShowProjectEditModal(false);
     setSavingProject(false);
   };
+
+  // --- Handlers: guardar, editar y eliminar tareas --- //
   
   const handleUpdateTask = async () => {
     if (!editingTask) return;
@@ -1322,6 +1347,8 @@ async function loadRiesgos(projectId) {
     setEditingTask(null);
   };
 
+  // --- Handlers: borrar tarea --- //
+  
   async function handleDeleteTask(idTarea) {
     const confirmed = window.confirm("¿Seguro que quieres eliminar esta tarea?");
     if (!confirmed) return;
@@ -1454,6 +1481,8 @@ async function loadRiesgos(projectId) {
     }
   }
 
+  // --- Handlers: crear costes --- //
+  
   async function handleCreateCost(e) {
     e.preventDefault();
     setSavingCost(true);
@@ -1491,6 +1520,8 @@ async function loadRiesgos(projectId) {
     }
   }
 
+    // --- Handlers: crear impactos ---/
+  
     async function handleCreateImpact(e) {
     e.preventDefault();
     setSavingImpact(true);
@@ -1557,6 +1588,9 @@ async function loadRiesgos(projectId) {
   return (
     <div style={styles.page}>
       <div style={styles.container}>
+        
+        {/* ===== SECCIÓN: CABECERA Y KPIs DEL PROYECTO ===== */}
+        
         <section style={styles.summaryCard}>
           <div
             style={{
@@ -1836,6 +1870,8 @@ async function loadRiesgos(projectId) {
           </div>
         </section>
 
+        {/* ===== SECCIÓN: CRONOGRAMA DE TAREAS ===== */}
+        
         <TaskGanttChart tasks={tareas} project={proyecto} />
 
         <section style={tableCardStyle}>
@@ -2126,7 +2162,7 @@ async function loadRiesgos(projectId) {
           )}
         </section>
 
-{/* ===== BLOQUE DE IMPACTO Y MODAL AÑADIR IMPACTO ===== */}
+{/* ===== SECCIÓN: TABLA DE TAREAS ===== */}
         
         <section style={tableCardStyle}>
           <div style={tableHeaderStyle}>
@@ -2336,7 +2372,7 @@ async function loadRiesgos(projectId) {
           )}
         </section>
 
-{/* ===== BLOQUE DE COSTES Y MODAL AÑADIR COSTE ===== */}        
+{/* ===== SECCIÓN DE COSTES Y MODAL AÑADIR COSTE ===== */}        
         
         <section style={tableCardStyle}>
           <div style={tableHeaderStyle}>
@@ -2542,7 +2578,7 @@ async function loadRiesgos(projectId) {
           )}
         </section>
 
-        {/* ===== MODAL AÑADIR RIESGO ===== */}
+        {/* ===== SECCIÓN TABLA DE RIESGOS Y MODAL AÑADIR RIESGO ===== */}
 
         <section style={tableCardStyle}>
           <div style={tableHeaderStyle}>
