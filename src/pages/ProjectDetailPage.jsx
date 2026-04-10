@@ -1076,7 +1076,7 @@ export default function ProjectDetailPage() {
   const [taskForm, setTaskForm] = useState({
     titulo: "",
     descripcion: "",
-    owner: "",
+    owners_ids: [],        // [C2] sustituye al campo libre "owner"
     estado_tarea: "No Iniciada",
     situacion: "En tiempo",
     fecha_inicio: "",
@@ -1108,6 +1108,7 @@ export default function ProjectDetailPage() {
   });
 
   const [riesgos, setRiesgos] = useState([]);
+  const [usuariosActivos, setUsuariosActivos] = useState([]);
   const [showRiskForm, setShowRiskForm] = useState(false);
   const [savingRisk, setSavingRisk] = useState(false);
   const [riskErrorMsg, setRiskErrorMsg] = useState("");
@@ -1168,9 +1169,9 @@ export default function ProjectDetailPage() {
     return data;
   }
 
-  async function loadTasks(projectId) {
+async function loadTasks(projectId) {
     const { data, error } = await supabase
-      .from("tareas")
+      .from("v_tareas_con_owners")   // [C4] antes era "tareas"
       .select(`
         id_tarea,
         id_proyecto,
@@ -1182,7 +1183,10 @@ export default function ProjectDetailPage() {
         fecha_inicio,
         fecha_fin,
         fecha_inicio_real,
-        fecha_fin_real
+        fecha_fin_real,
+        owners_ids,
+        owners_nombres,
+        owners_texto
       `)
       .eq("id_proyecto", projectId)
       .order("fecha_inicio", { ascending: true })
@@ -1284,11 +1288,12 @@ async function loadRiesgos(projectId) {
 
 // ===== Se integra la carga de las variables en el loadAll ===== //
       
-      const [tareasData, costesData, impactosData, riesgosData] = await Promise.all([
+      const [tareasData, costesData, impactosData, riesgosData, usuariosData] = await Promise.all([
         loadTasks(id),
         loadCostes(id),
         loadImpactos(id),
         loadRiesgos(id),
+        loadUsuariosActivosFn(),   // [C5] carga usuarios activos en paralelo
       ]);
       
 // ===== se guardan los datos en el estado ===== //
@@ -1298,6 +1303,7 @@ async function loadRiesgos(projectId) {
       setCostes(costesData);
       setImpactos(impactosData);
       setRiesgos(riesgosData);
+      setUsuariosActivos(usuariosData);   // [C5]
       
     } catch (err) {
       setErrorMsg(err.message || "Error cargando la ficha del proyecto");
@@ -1346,13 +1352,13 @@ async function loadRiesgos(projectId) {
     const { error } = await supabase
       .from("tareas")
       .update({
-        titulo: editingTask.titulo,
-        descripcion: editingTask.descripcion,
-        owner: editingTask.owner,
-        estado_tarea: editingTask.estado_tarea,
-        situacion: editingTask.situacion,
+        titulo:            editingTask.titulo,
+        descripcion:       editingTask.descripcion,
+        estado_tarea:      editingTask.estado_tarea,
+        situacion:         editingTask.situacion,
         fecha_inicio_real: editingTask.fecha_inicio_real || null,
-        fecha_fin_real: editingTask.fecha_fin_real || null,
+        fecha_fin_real:    editingTask.fecha_fin_real    || null,
+        // [C8] owner libre eliminado — los owners se gestionan via tareas_owners
       })
       .eq("id_tarea", editingTask.id_tarea);
 
@@ -1387,6 +1393,59 @@ async function loadRiesgos(projectId) {
     }
   }
 
+// [C6a] Carga usuarios activos para los desplegables de owners
+  async function loadUsuariosActivosFn() {
+    const { data, error } = await supabase.rpc("get_usuarios_activos");
+    if (error) throw new Error(error.message || "No se pudieron cargar los usuarios");
+    return data || [];
+  }
+
+  // [C6b] Añadir / quitar owner en el formulario de nueva tarea
+  function handleAddOwnerToForm(userId) {
+    if (!userId || taskForm.owners_ids.includes(userId)) return;
+    setTaskForm((prev) => ({ ...prev, owners_ids: [...prev.owners_ids, userId] }));
+  }
+
+  function handleRemoveOwnerFromForm(userId) {
+    setTaskForm((prev) => ({ ...prev, owners_ids: prev.owners_ids.filter((i) => i !== userId) }));
+  }
+
+  // [C6c] Asignar / quitar owner desde el modal de edición de tarea (inmediato en BD)
+  async function handleAddOwnerToTask(userId) {
+    if (!editingTask || !userId || (editingTask.owners_ids || []).includes(userId)) return;
+    const { error } = await supabase.rpc("asignar_owner_tarea", {
+      p_id_tarea:   editingTask.id_tarea,
+      p_id_usuario: userId,
+    });
+    if (error) { alert(error.message || "No se pudo asignar el owner"); return; }
+    const usuario = usuariosActivos.find((u) => u.id === userId);
+    setEditingTask((prev) => ({
+      ...prev,
+      owners_ids:     [...(prev.owners_ids || []), userId],
+      owners_nombres: [...(prev.owners_nombres || []), usuario?.nombre || ""],
+      owners_texto:   [...(prev.owners_nombres || []), usuario?.nombre || ""].join(", "),
+    }));
+    loadTasks(id).then(setTareas);
+  }
+
+  async function handleRemoveOwnerFromTask(userId) {
+    if (!editingTask || !userId) return;
+    const { error } = await supabase.rpc("eliminar_owner_tarea", {
+      p_id_tarea:   editingTask.id_tarea,
+      p_id_usuario: userId,
+    });
+    if (error) { alert(error.message || "No se pudo quitar el owner"); return; }
+    const nuevosIds     = (editingTask.owners_ids     || []).filter((i) => i !== userId);
+    const nuevosNombres = (editingTask.owners_nombres || []).filter((_, idx) => (editingTask.owners_ids || [])[idx] !== userId);
+    setEditingTask((prev) => ({
+      ...prev,
+      owners_ids:     nuevosIds,
+      owners_nombres: nuevosNombres,
+      owners_texto:   nuevosNombres.join(", "),
+    }));
+    loadTasks(id).then(setTareas);
+  }
+  
   useEffect(() => {
     loadAll();
   }, [id, navigate]);
@@ -1463,15 +1522,16 @@ async function loadRiesgos(projectId) {
     setSavingTask(true);
     setTaskErrorMsg("");
 
-    const { error } = await supabase.rpc("crear_tarea", {
-      p_id_proyecto: id,
-      p_titulo: taskForm.titulo,
-      p_descripcion: taskForm.descripcion || null,
-      p_owner: taskForm.owner || null,
+    // [C7] Paso 1: crear la tarea (owner libre a null, ya no se usa)
+    const { data: tareaCreada, error } = await supabase.rpc("crear_tarea", {
+      p_id_proyecto:  id,
+      p_titulo:       taskForm.titulo,
+      p_descripcion:  taskForm.descripcion || null,
+      p_owner:        null,
       p_estado_tarea: taskForm.estado_tarea,
-      p_situacion: taskForm.situacion,
+      p_situacion:    taskForm.situacion,
       p_fecha_inicio: taskForm.fecha_inicio || null,
-      p_fecha_fin: taskForm.fecha_fin || null,
+      p_fecha_fin:    taskForm.fecha_fin    || null,
     });
 
     if (error) {
@@ -1480,10 +1540,21 @@ async function loadRiesgos(projectId) {
       return;
     }
 
+    // [C7] Paso 2: asignar owners seleccionados si los hay
+    const idTareaCreada = tareaCreada?.id_tarea ?? tareaCreada;
+    if (idTareaCreada && taskForm.owners_ids.length > 0) {
+      for (const userId of taskForm.owners_ids) {
+        await supabase.rpc("asignar_owner_tarea", {
+          p_id_tarea:   idTareaCreada,
+          p_id_usuario: userId,
+        });
+      }
+    }
+
     setTaskForm({
       titulo: "",
       descripcion: "",
-      owner: "",
+      owners_ids: [],
       estado_tarea: "No Iniciada",
       situacion: "En tiempo",
       fecha_inicio: "",
@@ -2084,15 +2155,42 @@ async function loadRiesgos(projectId) {
                   />
                 </div>
 
-                <div>
-                  <label style={labelStyle}>Owner</label>
-                  <input
-                    type="text"
-                    name="owner"
-                    value={taskForm.owner}
-                    onChange={handleTaskFormChange}
+                {/* [C9] Selección de owners con tags — sustituye al input libre */}
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={labelStyle}>Owners de la tarea</label>
+                  <select
                     style={inputStyle}
-                  />
+                    value=""
+                    onChange={(e) => handleAddOwnerToForm(e.target.value)}
+                  >
+                    <option value="">— Añadir owner —</option>
+                    {usuariosActivos
+                      .filter((u) => !taskForm.owners_ids.includes(u.id))
+                      .map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.nombre} ({u.email})
+                        </option>
+                      ))}
+                  </select>
+                  {taskForm.owners_ids.length > 0 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                      {taskForm.owners_ids.map((uid) => {
+                        const u = usuariosActivos.find((x) => x.id === uid);
+                        return (
+                          <span key={uid} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#dbeafe", color: "#1d4ed8", border: "1px solid #bfdbfe", borderRadius: 999, padding: "3px 10px", fontSize: 13, fontWeight: 600 }}>
+                            {u?.nombre || uid}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveOwnerFromForm(uid)}
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "#1d4ed8", fontSize: 16, lineHeight: 1, padding: 0 }}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -2200,7 +2298,7 @@ async function loadRiesgos(projectId) {
                   <tr>
                     <th style={{ ...thStyle, width: "150px" }}>Título</th>
                     <th style={{ ...thStyle, width: "300px" }}>Descripción</th>
-                    <th style={{ ...thStyle, width: "100px" }}>Owner</th>
+                    <th style={{ ...thStyle, width: "160px" }}>Owner</th>
                     <th style={{ ...thStyle, width: "85px" }}>Inicio</th>
                     <th style={{ ...thStyle, width: "85px" }}>Fin</th>
                     <th style={{ ...thStyle, width: "85px" }}>Fin real</th>
@@ -2217,8 +2315,11 @@ async function loadRiesgos(projectId) {
                         {tarea.titulo || "-"}
                       </td>
                       <td style={tdDescriptionStyle}>{tarea.descripcion || "-"}</td>
-                      <td style={tdOwnerStyle} title={tarea.owner || ""}>
-                        {tarea.owner || "-"}
+                      {/* [C10] Muestra owners_texto en lugar del campo libre owner */}
+                      <td style={tdOwnerStyle} title={tarea.owners_texto || tarea.owner || ""}>
+                        {tarea.owners_texto || (
+                          <span style={{ color: "#9ca3af", fontStyle: "italic" }}>Sin asignar</span>
+                        )}
                       </td>
                       <td style={tdDateStyle}>{formatDate(tarea.fecha_inicio)}</td>
                       <td style={tdDateStyle}>{formatDate(tarea.fecha_fin)}</td>
@@ -2252,7 +2353,9 @@ async function loadRiesgos(projectId) {
                               setEditingTask({
                                 ...tarea,
                                 fecha_inicio_real: tarea.fecha_inicio_real || "",
-                                fecha_fin_real: tarea.fecha_fin_real || "",
+                                fecha_fin_real:    tarea.fecha_fin_real    || "",
+                                owners_ids:        tarea.owners_ids        || [],
+                                owners_nombres:    tarea.owners_nombres    || [],
                               });
                               setShowEditModal(true);
                             }}
@@ -3813,31 +3916,46 @@ async function loadRiesgos(projectId) {
                   />
                 </div>
 
-                <div>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "13px",
-                      fontWeight: 600,
-                      color: "#374151",
-                      marginBottom: "6px",
-                    }}
-                  >
-                    Owner
+                {/* [C12] Gestión de owners en modal de edición — sustituye al input libre */}
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#374151", marginBottom: "6px" }}>
+                    Owners de la tarea
                   </label>
-                  <input
-                    type="text"
-                    value={editingTask.owner || ""}
-                    onChange={(e) => setEditingTask({ ...editingTask, owner: e.target.value })}
-                    style={{
-                      width: "100%",
-                      padding: "10px 12px",
-                      borderRadius: "10px",
-                      border: "1px solid #d1d5db",
-                      fontSize: "14px",
-                      boxSizing: "border-box",
-                    }}
-                  />
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8, minHeight: 32 }}>
+                    {(editingTask.owners_ids || []).length === 0 ? (
+                      <span style={{ fontSize: 13, color: "#9ca3af", fontStyle: "italic" }}>Sin owners asignados</span>
+                    ) : (
+                      (editingTask.owners_ids || []).map((uid, idx) => {
+                        const nombre = (editingTask.owners_nombres || [])[idx] || uid;
+                        return (
+                          <span key={uid} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#dbeafe", color: "#1d4ed8", border: "1px solid #bfdbfe", borderRadius: 999, padding: "3px 10px", fontSize: 13, fontWeight: 600 }}>
+                            {nombre}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveOwnerFromTask(uid)}
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "#1d4ed8", fontSize: 16, lineHeight: 1, padding: 0 }}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        );
+                      })
+                    )}
+                  </div>
+                  <select
+                    style={inputStyle}
+                    value=""
+                    onChange={(e) => handleAddOwnerToTask(e.target.value)}
+                  >
+                    <option value="">— Añadir owner —</option>
+                    {usuariosActivos
+                      .filter((u) => !(editingTask.owners_ids || []).includes(u.id))
+                      .map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.nombre} ({u.email})
+                        </option>
+                      ))}
+                  </select>
                 </div>
 
                 <div>
