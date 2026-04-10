@@ -20,6 +20,7 @@ export default function NewProjectPage() {
   const [cargandoAcceso, setCargandoAcceso] = useState(true);
   const [mensaje, setMensaje] = useState("");
   const [tipoMensaje, setTipoMensaje] = useState("");
+  const [usuariosUniverso, setUsuariosUniverso] = useState([]);
 
   const [form, setForm] = useState({
     id_universo: "",
@@ -27,10 +28,9 @@ export default function NewProjectPage() {
     descripcion: "",
     beneficios: "",
     impacto_estimado: "",
-    owner: "",
+    owner: "",       // se mantiene por compatibilidad
+    id_owner: "",    // [N2] nuevo campo — UUID del owner seleccionado
     horizonte: ""
-//    fecha_inicio: "",
-//    fecha_fin: ""
   });
 
   useEffect(() => {
@@ -118,6 +118,25 @@ export default function NewProjectPage() {
     };
   }, [navigate]);
 
+  // [N1] Carga usuarios del universo seleccionado cuando cambia id_universo
+  useEffect(() => {
+    if (!form.id_universo) {
+      setUsuariosUniverso([]);
+      return;
+    }
+
+    async function cargarUsuariosUniverso() {
+      const { data, error } = await supabase.rpc("get_usuarios_universo", {
+        p_id_universo: Number(form.id_universo),
+      });
+      if (!error && data) {
+        setUsuariosUniverso(data);
+      }
+    }
+
+    cargarUsuariosUniverso();
+  }, [form.id_universo]);
+
   function handleChange(e) {
     const { name, value } = e.target;
     setForm((prev) => ({
@@ -153,12 +172,11 @@ export default function NewProjectPage() {
       p_beneficios: form.beneficios || null,
       p_impacto_estimado:
         form.impacto_estimado === "" ? 0 : Number(form.impacto_estimado),
-      p_owner: form.owner,
+      p_owner:    form.owner    || null,
+      p_id_owner: form.id_owner || null,   // [N4] UUID del owner seleccionado
       p_horizonte: form.horizonte,
       p_fase: "En Definición",
       p_situacion: "En tiempo"
-//      p_fecha_inicio: form.fecha_inicio || null,
-//      p_fecha_fin: form.fecha_fin || null
     });
 
     if (error) {
@@ -389,16 +407,30 @@ export default function NewProjectPage() {
                   )}
                 </div>
 
+                {/* [N3] Selector de owner vinculado a usuarios del universo */}
                 <div style={styles.field}>
                   <label style={styles.label}>Owner</label>
-                  <input
-                    type="text"
-                    name="owner"
-                    value={form.owner}
-                    onChange={handleChange}
+                  <select
+                    name="id_owner"
+                    value={form.id_owner}
+                    onChange={(e) => {
+                      const selected = usuariosUniverso.find((u) => u.id === e.target.value);
+                      setForm((prev) => ({
+                        ...prev,
+                        id_owner: e.target.value,
+                        owner: selected?.nombre || "",
+                      }));
+                    }}
                     required
                     style={styles.input}
-                  />
+                  >
+                    <option value="">— Selecciona un owner —</option>
+                    {usuariosUniverso.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.nombre} ({u.email})
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
