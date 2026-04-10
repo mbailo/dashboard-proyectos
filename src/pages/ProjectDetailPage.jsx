@@ -1062,7 +1062,8 @@ export default function ProjectDetailPage() {
   const [projectEditError, setProjectEditError] = useState("");
   const [projectEditForm, setProjectEditForm] = useState({
     titulo: "",
-    owner: "",
+    owner: "",       // se mantiene por compatibilidad
+    id_owner: "",    // [P1] UUID del owner seleccionado
     horizonte: "",
     descripcion: "",
     beneficios: "",
@@ -1327,10 +1328,11 @@ async function loadRiesgos(projectId) {
     const { error } = await supabase.rpc("actualizar_proyecto", {
       p_id_proyecto:  proyecto.id_proyecto,
       p_titulo:       projectEditForm.titulo,
-      p_owner:        projectEditForm.owner,
+      p_owner:        projectEditForm.owner    || null,
+      p_id_owner:     projectEditForm.id_owner || null,   // [P4] UUID del owner seleccionado
       p_horizonte:    projectEditForm.horizonte,
       p_descripcion:  projectEditForm.descripcion || null,
-      p_beneficios:   projectEditForm.beneficios || null,
+      p_beneficios:   projectEditForm.beneficios  || null,
     });
   
     if (error) {
@@ -1844,8 +1846,9 @@ async function loadRiesgos(projectId) {
                 Universo: {proyecto?.nombre_universo || "-"}
               </span>
 
+            {/* [P5] Muestra nombre_owner si está vinculado, si no cae en owner libre */}
               <span style={{ ...badgeStyle, background: "#f8fafc", color: "#334155", border: "1px solid #e2e8f0" }}>
-                Owner: {proyecto?.owner || "-"}
+                Owner: {proyecto?.nombre_owner || proyecto?.owner || "-"}
               </span>
 
               <span
@@ -1876,11 +1879,12 @@ async function loadRiesgos(projectId) {
                   type="button"
                   onClick={() => {
                     setProjectEditForm({
-                      titulo:      proyecto.titulo || "",
-                      owner:       proyecto.owner || "",
+                      titulo:      proyecto.titulo    || "",
+                      owner:       proyecto.owner     || "",
+                      id_owner:    proyecto.id_owner  || "",   // [P2] UUID del owner actual
                       horizonte:   proyecto.horizonte || "Quick-Win",
                       descripcion: proyecto.descripcion || "",
-                      beneficios:  proyecto.beneficios || "",
+                      beneficios:  proyecto.beneficios  || "",
                     });
                     setProjectEditError("");
                     setShowProjectEditModal(true);
@@ -3260,16 +3264,30 @@ async function loadRiesgos(projectId) {
                   />
                 </div>
         
+                {/* [P3] Selector de owner vinculado a usuarios activos */}
                 <div>
                   <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#374151", marginBottom: "6px" }}>
                     Owner
                   </label>
-                  <input
-                    type="text"
-                    value={projectEditForm.owner}
-                    onChange={(e) => setProjectEditForm({ ...projectEditForm, owner: e.target.value })}
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1px solid #d1d5db", fontSize: "14px", boxSizing: "border-box" }}
-                  />
+                  <select
+                    value={projectEditForm.id_owner}
+                    onChange={(e) => {
+                      const selected = usuariosActivos.find((u) => u.id === e.target.value);
+                      setProjectEditForm((prev) => ({
+                        ...prev,
+                        id_owner: e.target.value,
+                        owner: selected?.nombre || "",
+                      }));
+                    }}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1px solid #d1d5db", fontSize: "14px", boxSizing: "border-box", background: "#ffffff" }}
+                  >
+                    <option value="">— Selecciona un owner —</option>
+                    {usuariosActivos.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.nombre} ({u.email})
+                      </option>
+                    ))}
+                  </select>
                 </div>
         
                 <div>
